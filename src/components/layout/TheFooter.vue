@@ -1,30 +1,42 @@
 <template>
   <div class="footer">
     <div class="footer-left">
-      <span class="version">Version 1.0.0</span>
+      <span class="version">版本 {{ version }}</span>
     </div>
+    
     <div class="footer-right">
-      <el-link type="primary" href="#" class="mr-4">使用說明</el-link>
-      <el-link type="primary" href="#" class="mr-4">API 文件</el-link>
-      <el-link type="primary" href="#">聯絡支援</el-link>
+      <el-link type="primary" href="#" class="mr-4">使用手冊</el-link>
+      <el-link type="primary" href="#" class="mr-4">技術支援</el-link>
+      <el-link type="primary" href="#" class="mr-4">問題回報</el-link>
+      <el-link type="primary" href="#">聯絡我們</el-link>
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped>
+<script setup>
+import { ref } from 'vue'
+
+const version = ref('1.0.0')
+</script>
+
+<style>
 .footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 100%;
   padding: 0 20px;
-  background-color: $background-white;
-  border-top: 1px solid $border-light;
-  color: $text-secondary;
-  font-size: 14px;
+  background-color: var(--background-white);
+  border-top: 1px solid var(--border-light);
 }
 
 .version {
-  color: $text-secondary;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
 }
 </style> 

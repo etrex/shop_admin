@@ -3,101 +3,204 @@
     <el-menu
       :default-active="activeMenu"
       class="sidebar-menu"
-      :router="true"
       :collapse="isCollapse"
+      @select="handleSelect"
     >
-      <el-menu-item index="/">
-        <el-icon><Monitor /></el-icon>
+      <!-- Task List Section -->
+      <el-sub-menu index="tasks">
+        <template #title>
+          <el-icon><list /></el-icon>
+          <span>任務列表</span>
+          <el-badge :value="pendingTasksCount" class="task-badge" />
+        </template>
+        
+        <el-menu-item-group title="今日任務">
+          <el-menu-item v-for="task in todayTasks" :key="task.id" :index="`task-${task.id}`">
+            <el-icon>
+              <component :is="icons[task.icon]" />
+            </el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>{{ task.title }}</span>
+                <el-tag size="small" :type="task.priority">{{ task.priority }}</el-tag>
+              </div>
+            </template>
+          </el-menu-item>
+        </el-menu-item-group>
+        
+        <el-menu-item-group title="待處理任務">
+          <el-menu-item v-for="task in pendingTasks" :key="task.id" :index="`task-${task.id}`">
+            <el-icon>
+              <component :is="icons[task.icon]" />
+            </el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>{{ task.title }}</span>
+                <el-tag size="small" :type="task.priority">{{ task.priority }}</el-tag>
+              </div>
+            </template>
+          </el-menu-item>
+        </el-menu-item-group>
+      </el-sub-menu>
+
+      <!-- Quick Links Section -->
+      <el-sub-menu index="quick-links">
+        <template #title>
+          <el-icon><link /></el-icon>
+          <span>快速連結</span>
+        </template>
+        
+        <el-menu-item index="new-order">
+          <el-icon><plus /></el-icon>
+          <template #title>新增訂單</template>
+        </el-menu-item>
+        
+        <el-menu-item index="stock-check">
+          <el-icon><box /></el-icon>
+          <template #title>庫存查詢</template>
+        </el-menu-item>
+        
+        <el-menu-item index="procurement">
+          <el-icon><shopping-cart /></el-icon>
+          <template #title>採購作業</template>
+        </el-menu-item>
+      </el-sub-menu>
+
+      <!-- Main Navigation -->
+      <el-menu-item index="dashboard">
+        <el-icon><odometer /></el-icon>
         <template #title>儀表板</template>
       </el-menu-item>
       
-      <el-sub-menu index="/order">
+      <el-sub-menu index="order">
         <template #title>
-          <el-icon><Document /></el-icon>
+          <el-icon><document /></el-icon>
           <span>訂單管理</span>
         </template>
-        <el-menu-item index="/order">訂單列表</el-menu-item>
-        <el-menu-item index="/order/create">建立訂單</el-menu-item>
+        <el-menu-item index="order-list">訂單列表</el-menu-item>
+        <el-menu-item index="order-create">建立訂單</el-menu-item>
       </el-sub-menu>
       
-      <el-sub-menu index="/inventory">
+      <el-sub-menu index="inventory">
         <template #title>
-          <el-icon><Box /></el-icon>
+          <el-icon><box /></el-icon>
           <span>庫存管理</span>
         </template>
-        <el-menu-item index="/inventory">庫存總覽</el-menu-item>
-        <el-menu-item index="/inventory/movement">庫存異動</el-menu-item>
+        <el-menu-item index="inventory-list">庫存列表</el-menu-item>
+        <el-menu-item index="inventory-movement">庫存異動</el-menu-item>
+        <el-menu-item index="inventory-transfer">庫存調撥</el-menu-item>
       </el-sub-menu>
       
-      <el-sub-menu index="/procurement">
+      <el-sub-menu index="procurement">
         <template #title>
-          <el-icon><ShoppingCart /></el-icon>
+          <el-icon><shopping-cart /></el-icon>
           <span>採購管理</span>
         </template>
-        <el-menu-item index="/procurement">採購單列表</el-menu-item>
-        <el-menu-item index="/procurement/create">建立採購單</el-menu-item>
+        <el-menu-item index="procurement-create">建立採購單</el-menu-item>
+        <el-menu-item index="procurement-list">採購單列表</el-menu-item>
+        <el-menu-item index="supplier">供應商管理</el-menu-item>
       </el-sub-menu>
     </el-menu>
-    
-    <!-- Task List -->
-    <div class="task-list" v-if="!isCollapse">
-      <div class="task-list-header">
-        <h3>待辦事項</h3>
-        <el-button type="primary" size="small" :icon="Plus" circle @click="createTask" />
-      </div>
-      
-      <el-scrollbar height="300px">
-        <el-checkbox-group v-model="checkedTasks">
-          <div v-for="task in tasks" :key="task.id" class="task-item">
-            <el-checkbox :label="task.id">{{ task.title }}</el-checkbox>
-            <span class="task-date">{{ task.date }}</span>
-          </div>
-        </el-checkbox-group>
-      </el-scrollbar>
+
+    <!-- Collapse Toggle -->
+    <div class="sidebar-footer">
+      <el-button
+        :icon="isCollapse ? Expand : Fold"
+        circle
+        @click="toggleCollapse"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
-  Monitor,
-  Document,
+  List,
+  Link,
+  Plus,
   Box,
   ShoppingCart,
-  Plus
+  Odometer,
+  Document,
+  Expand,
+  Fold,
+  Warning
 } from '@element-plus/icons-vue'
 
+const router = useRouter()
 const route = useRoute()
 const isCollapse = ref(false)
-const checkedTasks = ref([])
-
-// Mock tasks data
-const tasks = ref([
-  { id: 1, title: '確認新訂單', date: '今天' },
-  { id: 2, title: '處理退貨申請', date: '今天' },
-  { id: 3, title: '庫存盤點', date: '明天' },
-  { id: 4, title: '聯繫供應商', date: '明天' },
-  { id: 5, title: '更新商品資訊', date: '後天' }
-])
 
 const activeMenu = computed(() => {
-  return route.path
+  return route.path.split('/')[1] || 'dashboard'
 })
 
-const createTask = () => {
-  // TODO: Implement task creation
+// Mock tasks data
+const todayTasks = ref([
+  {
+    id: 1,
+    title: '確認新訂單',
+    priority: 'warning',
+    icon: 'document'
+  },
+  {
+    id: 2,
+    title: '處理退貨申請',
+    priority: 'danger',
+    icon: 'warning'
+  }
+])
+
+const pendingTasks = ref([
+  {
+    id: 3,
+    title: '庫存盤點',
+    priority: 'info',
+    icon: 'box'
+  },
+  {
+    id: 4,
+    title: '供應商評估',
+    priority: 'success',
+    icon: 'shopping-cart'
+  }
+])
+
+const pendingTasksCount = computed(() => {
+  return todayTasks.value.length + pendingTasks.value.length
+})
+
+const handleSelect = (index) => {
+  if (index.startsWith('task-')) {
+    // Handle task selection
+    const taskId = index.split('-')[1]
+    console.log('Selected task:', taskId)
+  } else {
+    // Handle navigation
+    router.push({ name: index })
+  }
+}
+
+const toggleCollapse = () => {
+  isCollapse.value = !isCollapse.value
+}
+
+const icons = {
+  document: Document,
+  warning: Warning,
+  box: Box,
+  'shopping-cart': ShoppingCart
 }
 </script>
 
-<style lang="scss" scoped>
+<style>
 .sidebar {
   height: 100%;
-  border-right: 1px solid $border-light;
-  background-color: $background-white;
   display: flex;
   flex-direction: column;
+  border-right: 1px solid var(--border-light);
 }
 
 .sidebar-menu {
@@ -105,41 +208,35 @@ const createTask = () => {
   border-right: none;
 }
 
-.task-list {
-  padding: 20px;
-  border-top: 1px solid $border-light;
-}
-
-.task-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  
-  h3 {
-    margin: 0;
-    color: $text-primary;
-    font-size: 16px;
-  }
-}
-
 .task-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  
-  .task-date {
-    font-size: 12px;
-    color: $text-secondary;
-  }
+  justify-content: space-between;
+  width: 100%;
 }
 
-:deep(.el-menu) {
-  border-right: none;
+.task-badge {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
-:deep(.el-menu-item.is-active) {
-  background-color: mix($primary-color, $background-white, 10%);
+.sidebar-footer {
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Override element-plus styles */
+.el-menu {
+  --el-menu-hover-bg-color: var(--background-base);
+}
+
+.el-menu-item-group__title {
+  padding: 8px 20px;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 </style> 

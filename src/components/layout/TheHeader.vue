@@ -18,13 +18,44 @@
           :key="role.value"
           :label="role.label"
           :value="role.value"
-        />
+        >
+          <span>{{ role.label }}</span>
+          <el-tag size="small" class="ml-2">
+            {{ role.permissions.length }} 權限
+          </el-tag>
+        </el-option>
       </el-select>
       
       <!-- Notifications -->
-      <el-badge :value="notificationCount" class="mr-4">
-        <el-button :icon="Bell" circle @click="showNotifications" />
-      </el-badge>
+      <el-popover
+        placement="bottom-end"
+        :width="300"
+        trigger="click"
+      >
+        <template #reference>
+          <div class="notification-trigger mr-4">
+            <el-badge :value="notificationCount" :max="99">
+              <el-button :icon="Bell" circle />
+            </el-badge>
+          </div>
+        </template>
+        
+        <div class="notifications-panel">
+          <div class="notifications-header">
+            <span>通知</span>
+            <el-button link type="primary" @click="markAllRead">全部標為已讀</el-button>
+          </div>
+          <el-scrollbar max-height="300px">
+            <div v-for="notification in notifications" :key="notification.id" class="notification-item">
+              <el-icon><component :is="notification.icon" /></el-icon>
+              <div class="notification-content">
+                <div class="notification-title">{{ notification.title }}</div>
+                <div class="notification-time">{{ notification.time }}</div>
+              </div>
+            </div>
+          </el-scrollbar>
+        </div>
+      </el-popover>
       
       <!-- User Dropdown -->
       <el-dropdown trigger="click" @command="handleCommand">
@@ -37,9 +68,18 @@
         </span>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item command="profile">個人資料</el-dropdown-item>
-            <el-dropdown-item command="settings">設定</el-dropdown-item>
-            <el-dropdown-item divided command="logout">登出</el-dropdown-item>
+            <el-dropdown-item command="profile">
+              <el-icon><user /></el-icon>
+              <span>個人資料</span>
+            </el-dropdown-item>
+            <el-dropdown-item command="settings">
+              <el-icon><setting /></el-icon>
+              <span>設定</span>
+            </el-dropdown-item>
+            <el-dropdown-item divided command="logout">
+              <el-icon><switch-button /></el-icon>
+              <span>登出</span>
+            </el-dropdown-item>
           </el-dropdown-menu>
         </template>
       </el-dropdown>
@@ -49,19 +89,51 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Bell, ArrowDown } from '@element-plus/icons-vue'
+import { Bell, ArrowDown, User, Setting, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/modules/user'
+import { colors, textColors, borderColors, backgroundColors } from '@/assets/styles/variables'
 
 const userStore = useUserStore()
 const currentRole = ref(userStore.currentRole)
 const notificationCount = ref(5)
 
 const roles = [
-  { label: '管理員', value: 'admin' },
-  { label: '客服人員', value: 'customer_service' },
-  { label: '倉庫人員', value: 'warehouse' },
-  { label: '採購人員', value: 'procurement' }
+  { 
+    label: '管理員', 
+    value: 'admin',
+    permissions: ['all']
+  },
+  { 
+    label: '客服人員', 
+    value: 'customer_service',
+    permissions: ['order_management', 'customer_service']
+  },
+  { 
+    label: '倉庫人員', 
+    value: 'warehouse',
+    permissions: ['inventory_management', 'shipping']
+  },
+  { 
+    label: '採購人員', 
+    value: 'procurement',
+    permissions: ['procurement_management', 'supplier_management']
+  }
 ]
+
+const notifications = ref([
+  {
+    id: 1,
+    title: '新訂單待處理',
+    time: '10 分鐘前',
+    icon: 'document'
+  },
+  {
+    id: 2,
+    title: '庫存警告',
+    time: '30 分鐘前',
+    icon: 'warning'
+  }
+])
 
 const userInfo = ref({
   name: 'Admin',
@@ -72,8 +144,8 @@ const handleRoleChange = (role) => {
   userStore.setRole(role)
 }
 
-const showNotifications = () => {
-  // TODO: Show notifications panel
+const markAllRead = () => {
+  notificationCount.value = 0
 }
 
 const handleCommand = (command) => {
@@ -85,21 +157,21 @@ const handleCommand = (command) => {
       // TODO: Navigate to settings page
       break
     case 'logout':
-      // TODO: Handle logout
+      userStore.logout()
       break
   }
 }
 </script>
 
-<style lang="scss" scoped>
+<style>
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: 100%;
   padding: 0 20px;
-  background-color: $background-white;
-  border-bottom: 1px solid $border-light;
+  background-color: var(--background-white);
+  border-bottom: 1px solid var(--border-light);
 }
 
 .logo {
@@ -107,7 +179,7 @@ const handleCommand = (command) => {
   align-items: center;
   font-size: 20px;
   font-weight: bold;
-  color: $primary-color;
+  color: var(--primary-color);
 
   .logo-image {
     height: 32px;
@@ -121,7 +193,48 @@ const handleCommand = (command) => {
 }
 
 .role-select {
-  width: 120px;
+  width: 140px;
+}
+
+.notifications-panel {
+  .notifications-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .notification-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 12px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    
+    &:hover {
+      background-color: var(--background-base);
+    }
+    
+    .el-icon {
+      margin-right: 12px;
+      margin-top: 2px;
+    }
+    
+    .notification-content {
+      flex: 1;
+      
+      .notification-title {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+      
+      .notification-time {
+        font-size: 12px;
+        color: var(--text-secondary);
+      }
+    }
+  }
 }
 
 .user-info {
@@ -130,7 +243,18 @@ const handleCommand = (command) => {
   cursor: pointer;
   
   span {
-    color: $text-regular;
+    color: var(--text-regular);
+  }
+}
+
+.el-dropdown-menu {
+  .el-dropdown-item {
+    display: flex;
+    align-items: center;
+    
+    .el-icon {
+      margin-right: 8px;
+    }
   }
 }
 </style>

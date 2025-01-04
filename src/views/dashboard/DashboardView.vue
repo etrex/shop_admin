@@ -74,8 +74,18 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
+import { colors, textColors } from '@/assets/styles/variables'
+
+// 設置 CSS 變數
+onMounted(() => {
+  document.documentElement.style.setProperty('--text-primary', textColors.primary)
+  document.documentElement.style.setProperty('--text-regular', textColors.regular)
+  document.documentElement.style.setProperty('--text-secondary', textColors.secondary)
+  document.documentElement.style.setProperty('--success-color', colors.success)
+  document.documentElement.style.setProperty('--danger-color', colors.danger)
+})
 
 const quickStats = ref([
   {
@@ -153,7 +163,7 @@ const recentActivities = ref([
 ])
 </script>
 
-<style lang="scss" scoped>
+<style>
 .dashboard {
   padding: 20px;
 }
@@ -174,18 +184,18 @@ const recentActivities = ref([
   .stat-value {
     font-size: 24px;
     font-weight: bold;
-    color: $text-primary;
+    color: var(--text-primary);
   }
 
   .stat-change {
     font-size: 14px;
     
     &.up {
-      color: $success-color;
+      color: var(--success-color);
     }
     
     &.down {
-      color: $danger-color;
+      color: var(--danger-color);
     }
   }
 }
@@ -206,28 +216,10 @@ const recentActivities = ref([
 
 .task-label {
   margin-right: 12px;
-  color: $text-regular;
+  color: var(--text-regular);
 }
 
 .task-percentage {
-  color: $text-secondary;
-}
-
-:deep(.el-timeline-item__node) {
-  &.el-timeline-item__node--primary {
-    background-color: $primary-color;
-  }
-  
-  &.el-timeline-item__node--success {
-    background-color: $success-color;
-  }
-  
-  &.el-timeline-item__node--warning {
-    background-color: $warning-color;
-  }
-  
-  &.el-timeline-item__node--info {
-    background-color: $info-color;
-  }
+  color: var(--text-secondary);
 }
 </style> 
