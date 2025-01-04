@@ -19,10 +19,12 @@
           :label="role.label"
           :value="role.value"
         >
-          <span>{{ role.label }}</span>
-          <el-tag size="small" class="ml-2">
-            {{ role.permissions.length }} 權限
-          </el-tag>
+          <div class="role-option">
+            <span class="role-name">{{ role.label }}</span>
+            <el-tag size="small" class="permission-tag">
+              {{ role.permissions.length }} 權限
+            </el-tag>
+          </div>
         </el-option>
       </el-select>
       
@@ -88,37 +90,21 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { Bell, ArrowDown, User, Setting, SwitchButton } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/modules/user'
 import { colors, textColors, borderColors, backgroundColors } from '@/assets/styles/variables'
 
 const userStore = useUserStore()
-const currentRole = ref(userStore.currentRole)
+const currentRole = computed(() => userStore.currentRole)
 const notificationCount = ref(5)
 
-const roles = [
-  { 
-    label: '管理員', 
-    value: 'admin',
-    permissions: ['all']
-  },
-  { 
-    label: '客服人員', 
-    value: 'customer_service',
-    permissions: ['order_management', 'customer_service']
-  },
-  { 
-    label: '倉庫人員', 
-    value: 'warehouse',
-    permissions: ['inventory_management', 'shipping']
-  },
-  { 
-    label: '採購人員', 
-    value: 'procurement',
-    permissions: ['procurement_management', 'supplier_management']
-  }
-]
+// 從 store 獲取角色列表
+const roles = Object.entries(userStore.roles).map(([value, role]) => ({
+  label: role.label,
+  value,
+  permissions: role.permissions
+}))
 
 const notifications = ref([
   {
@@ -135,10 +121,8 @@ const notifications = ref([
   }
 ])
 
-const userInfo = ref({
-  name: 'Admin',
-  avatar: ''
-})
+// 使用 computed 從 store 獲取用戶資訊
+const userInfo = computed(() => userStore.userInfo)
 
 const handleRoleChange = (role) => {
   userStore.setRole(role)
@@ -163,7 +147,7 @@ const handleCommand = (command) => {
 }
 </script>
 
-<style>
+<style lang="scss" scoped>
 .header {
   display: flex;
   align-items: center;
@@ -172,6 +156,34 @@ const handleCommand = (command) => {
   padding: 0 20px;
   background-color: var(--background-white);
   border-bottom: 1px solid var(--border-light);
+
+  .header-right {
+    display: flex;
+    align-items: center;
+
+    .role-select {
+      width: 180px;
+      background-color: #e6f7ff !important;
+
+      :deep(.el-input__wrapper) {
+        background-color: #e6f7ff !important;
+      }
+
+      :deep(.el-select-dropdown) {
+        background-color: #f0f9ff !important;
+        min-width: 240px !important;
+      }
+
+      :deep(.el-select-dropdown__item) {
+        height: auto !important;
+        padding: 8px 20px !important;
+        
+        &:hover {
+          background-color: #bae7ff !important;
+        }
+      }
+    }
+  }
 }
 
 .logo {
@@ -193,7 +205,43 @@ const handleCommand = (command) => {
 }
 
 .role-select {
-  width: 140px;
+  width: 180px;
+  background-color: #e6f7ff !important;
+
+  :deep(.el-input__wrapper) {
+    background-color: #e6f7ff !important;
+  }
+
+  :deep(.el-select-dropdown) {
+    background-color: #f0f9ff !important;
+    min-width: 240px !important;
+  }
+
+  :deep(.el-select-dropdown__item) {
+    height: auto !important;
+    padding: 8px 20px !important;
+    
+    &:hover {
+      background-color: #bae7ff !important;
+    }
+  }
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 0;
+
+  .role-name {
+    font-size: 14px;
+    color: var(--text-regular);
+  }
+
+  .permission-tag {
+    margin-left: 12px;
+  }
 }
 
 .notifications-panel {

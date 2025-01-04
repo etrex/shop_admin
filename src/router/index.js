@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
+import { useUserStore } from '@/stores/modules/user'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -32,6 +33,17 @@ const router = createRouter({
       ]
     },
     {
+      path: '/product',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
+          name: 'product-list',
+          component: () => import('@/views/product/ProductListView.vue')
+        }
+      ]
+    },
+    {
       path: '/inventory',
       component: DefaultLayout,
       children: [
@@ -44,6 +56,11 @@ const router = createRouter({
           path: 'movement',
           name: 'inventory-movement',
           component: () => import('@/views/inventory/InventoryMovementView.vue')
+        },
+        {
+          path: 'transfer',
+          name: 'inventory-transfer',
+          component: () => import('@/views/inventory/InventoryTransferView.vue')
         }
       ]
     },
@@ -60,10 +77,27 @@ const router = createRouter({
           path: 'create',
           name: 'procurement-create',
           component: () => import('@/views/procurement/ProcurementCreateView.vue')
+        },
+        {
+          path: 'supplier',
+          name: 'supplier',
+          component: () => import('@/views/procurement/SupplierView.vue')
         }
       ]
     }
   ]
+})
+
+// 導航守衛
+router.beforeEach((to, from, next) => {
+  const userStore = useUserStore()
+  
+  // 如果是消費者且訪問首頁，重定向到訂單列表
+  if (to.path === '/' && userStore.currentRole === 'customer') {
+    next({ name: 'order-list' })
+  } else {
+    next()
+  }
 })
 
 export default router 
