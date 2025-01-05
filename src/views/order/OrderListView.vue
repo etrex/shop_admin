@@ -57,51 +57,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/modules/user'
+import { useOrderStore } from '@/stores/modules/order'
 
 const router = useRouter()
 const userStore = useUserStore()
+const orderStore = useOrderStore()
 
 // 列表數據
-const orders = ref([])
+const orders = computed(() => orderStore.getAllOrders)
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = ref(0)
-
-// 模擬訂單數據
-const mockOrders = [
-  {
-    id: 'ORD20240101001',
-    created_at: '2024-01-01 10:00:00',
-    total: 3000,
-    status: 'pending',
-    payment: {
-      method: 'online'
-    }
-  },
-  {
-    id: 'ORD20240102001',
-    created_at: '2024-01-02 15:30:00',
-    total: 5000,
-    status: 'processing',
-    payment: {
-      method: 'cod'
-    }
-  },
-  {
-    id: 'ORD20240103001',
-    created_at: '2024-01-03 09:15:00',
-    total: 2000,
-    status: 'completed',
-    payment: {
-      method: 'online'
-    }
-  }
-]
+const total = computed(() => orders.value.length)
 
 // 格式化日期
 const formatDate = (date) => {
@@ -165,11 +136,8 @@ const handleSizeChange = (size) => {
 const fetchOrders = async () => {
   loading.value = true
   try {
-    // TODO: 實作獲取訂單列表 API
-    // 模擬 API 請求
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    orders.value = mockOrders
-    total.value = mockOrders.length
+    // 不需要做任何事情，因為數據已經在 store 中了
+    await new Promise(resolve => setTimeout(resolve, 100))
   } catch (error) {
     console.error('獲取訂單列表失敗：', error)
     ElMessage.error('獲取訂單列表失敗')

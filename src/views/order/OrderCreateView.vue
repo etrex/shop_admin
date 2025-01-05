@@ -153,9 +153,11 @@ import { Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/modules/user'
 import { useRouter } from 'vue-router'
+import { useOrderStore } from '@/stores/modules/order'
 
 const router = useRouter()
 const userStore = useUserStore()
+const orderStore = useOrderStore()
 const customerInfo = computed(() => userStore.userInfo.customerInfo)
 
 // 模擬商品數據
@@ -251,9 +253,16 @@ const submitOrder = async () => {
     submitting.value = true
     await formRef.value.validate()
     
-    // TODO: 實作訂單提交 API
-    console.log('訂單資料：', form)
+    // 建立訂單
+    const orderData = {
+      customer: form.customer,
+      products: form.products,
+      payment: form.payment,
+      note: form.note,
+      total: form.total
+    }
     
+    const orderId = orderStore.createOrder(orderData)
     ElMessage.success('訂單提交成功')
     // 導向訂單列表頁面
     router.push({ name: 'order-list' })
