@@ -29,6 +29,22 @@ const router = createRouter({
           path: 'create',
           name: 'order-create',
           component: () => import('@/views/order/OrderCreateView.vue')
+        },
+        {
+          path: ':id',
+          name: 'order-detail',
+          component: () => import('@/views/order/OrderDetailView.vue')
+        }
+      ]
+    },
+    {
+      path: '/task',
+      component: DefaultLayout,
+      children: [
+        {
+          path: '',
+          name: 'task-list',
+          component: () => import('@/views/task/TaskListView.vue')
         }
       ]
     },
