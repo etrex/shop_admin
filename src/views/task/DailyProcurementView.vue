@@ -252,6 +252,57 @@
                   ) }}</span>
                 </div>
               </div>
+
+              <!-- 湊箱商品選擇 -->
+              <div class="box-completion" v-if="procurementStore.supplierBoxItems(supplier.id).length > 0">
+                <h4>湊箱商品</h4>
+                <el-table 
+                  :data="procurementStore.supplierBoxItems(supplier.id)"
+                  style="width: 100%; margin-top: 16px"
+                >
+                  <el-table-column prop="name" label="商品名稱" />
+                  <el-table-column prop="currentStock" label="目前庫存" width="100" />
+                  <el-table-column prop="price" label="單價" width="120">
+                    <template #default="{ row }">
+                      NT$ {{ formatNumber(row.price) }}
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="採購數量" width="120">
+                    <template #default="{ row }">
+                      <el-input-number 
+                        v-model="row.purchaseQty" 
+                        :min="0" 
+                        :max="999"
+                        size="small"
+                        @change="handleBoxItemQtyChange(row, $event)"
+                      />
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="小計" width="120">
+                    <template #default="{ row }">
+                      NT$ {{ formatNumber(row.price * row.purchaseQty) }}
+                    </template>
+                  </el-table-column>
+                </el-table>
+
+                <!-- 湊箱商品小計 -->
+                <div class="box-items-summary">
+                  <div class="summary-item">
+                    <span>湊箱總數：</span>
+                    <span class="value">{{ 
+                      procurementStore.supplierBoxItems(supplier.id)
+                        .reduce((sum, item) => sum + (item.purchaseQty || 0), 0)
+                    }} 瓶</span>
+                  </div>
+                  <div class="summary-item">
+                    <span>湊箱總額：</span>
+                    <span class="amount">NT$ {{ formatNumber(
+                      procurementStore.supplierBoxItems(supplier.id)
+                        .reduce((sum, item) => sum + (item.price * (item.purchaseQty || 0)), 0)
+                    ) }}</span>
+                  </div>
+                </div>
+              </div>
             </el-tab-pane>
           </el-tabs>
           <el-empty v-else description="沒有需要採購的商品" />
@@ -429,6 +480,11 @@ const showItemDetail = (item) => {
   itemDetailVisible.value = true
 }
 
+// 處理湊箱商品數量變更
+const handleBoxItemQtyChange = (item, value) => {
+  procurementStore.updateBoxItemQuantity(item.id, value)
+}
+
 // 生成進貨單
 const generatePurchaseOrders = () => {
   const activeSuppliers = procurementStore.activeSuppliers
@@ -441,22 +497,30 @@ const generatePurchaseOrders = () => {
 
   // 為每個供應商創建進貨單
   activeSuppliers.forEach(supplier => {
-    const items = procurementStore.filteredSuggestions.filter(item => 
+    // 一般採購商品
+    const regularItems = procurementStore.filteredSuggestions.filter(item => 
       item.selectedSupplierId === supplier.id && item.purchaseQty > 0
     )
+
+    // 湊箱商品
+    const boxItems = procurementStore.supplierBoxItems(supplier.id)
+      .filter(item => item.purchaseQty > 0)
+
+    // 合併所有採購項目
+    const allItems = [...regularItems, ...boxItems]
 
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
 
     // 計算總金額
-    const totalAmount = items.reduce((sum, item) => {
+    const totalAmount = allItems.reduce((sum, item) => {
       return sum + (item.price * item.purchaseQty)
     }, 0)
 
     // 創建進貨單
     purchaseOrderStore.createPurchaseOrder({
       supplier,
-      items,
+      items: allItems,
       totalAmount,
       expectedDeliveryDate: tomorrow.toISOString(),
       relatedOrders: procurementStore.selectedOrders
@@ -624,6 +688,48 @@ onMounted(async () => {
 
     h4 {
       margin: 0 0 16px;
+    }
+  }
+
+  .box-completion {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--el-border-color-lighter);
+
+    h4 {
+      margin: 0 0 16px;
+      color: var(--el-text-color-primary);
+      font-size: 16px;
+    }
+  }
+
+  .box-items-summary {
+    margin-top: 16px;
+    padding: 16px;
+    background: var(--el-fill-color-light);
+    border-radius: 4px;
+
+    .summary-item {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 8px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      .value {
+        font-weight: bold;
+        margin-left: 8px;
+      }
+
+      .amount {
+        font-size: 18px;
+        font-weight: bold;
+        color: var(--el-color-success);
+        margin-left: 8px;
+      }
     }
   }
 }

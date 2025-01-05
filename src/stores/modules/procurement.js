@@ -56,6 +56,29 @@ export const useProcurementStore = defineStore('procurement', {
         purchaseQty: 0
       }
     ],
+    // 湊箱商品列表
+    boxCompletionItems: [
+      {
+        id: 'P005',
+        name: '法國波爾多紅酒 2019',
+        currentStock: 5,
+        price: 2680,
+        suppliers: ['S001'],
+        selectedSupplierId: 'S001',
+        boxSize: 12,
+        purchaseQty: 0
+      },
+      {
+        id: 'P006',
+        name: '義大利紅酒 2020',
+        currentStock: 3,
+        price: 1980,
+        suppliers: ['S002'],
+        selectedSupplierId: 'S002',
+        boxSize: 6,
+        purchaseQty: 0
+      }
+    ],
     suppliers: [
       { 
         id: 'S001', 
@@ -115,11 +138,25 @@ export const useProcurementStore = defineStore('procurement', {
 
     // 獲取活躍供應商列表
     activeSuppliers: (state) => {
-      return state.suppliers.filter(supplier => {
-        return state.procurementSuggestions.some(item => 
-          item.selectedSupplierId === supplier.id && item.purchaseQty > 0
-        )
+      const supplierSet = new Set()
+      
+      // 檢查一般採購商品
+      state.procurementSuggestions.forEach(item => {
+        if (item.selectedSupplierId && item.purchaseQty > 0) {
+          supplierSet.add(item.selectedSupplierId)
+        }
       })
+      
+      // 檢查湊箱商品
+      state.boxCompletionItems.forEach(item => {
+        if (item.selectedSupplierId && item.purchaseQty > 0) {
+          supplierSet.add(item.selectedSupplierId)
+        }
+      })
+      
+      return state.suppliers.filter(supplier => 
+        supplierSet.has(supplier.id)
+      )
     },
 
     // 獲取商品的供應商列表
@@ -152,6 +189,13 @@ export const useProcurementStore = defineStore('procurement', {
       
       const remainingStock = item.currentStock - orderedQty
       return remainingStock < 0 ? Math.abs(remainingStock) : 0
+    },
+
+    // 獲取供應商的湊箱商品
+    supplierBoxItems: (state) => (supplierId) => {
+      return state.boxCompletionItems.filter(item => 
+        item.selectedSupplierId === supplierId
+      )
     }
   },
 
@@ -212,6 +256,17 @@ export const useProcurementStore = defineStore('procurement', {
       this.procurementSuggestions.forEach(item => {
         item.purchaseQty = 0
       })
+      this.boxCompletionItems.forEach(item => {
+        item.purchaseQty = 0
+      })
+    },
+
+    // 更新湊箱商品的採購數量
+    updateBoxItemQuantity(itemId, quantity) {
+      const item = this.boxCompletionItems.find(item => item.id === itemId)
+      if (item) {
+        item.purchaseQty = quantity
+      }
     }
   }
 }) 
