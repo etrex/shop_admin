@@ -11,7 +11,7 @@
           <div class="card-header">
             <h3>選擇待處理訂單</h3>
             <div class="actions">
-              <el-button type="primary" @click="confirmOrderSelection" :disabled="!selectedOrders.length">
+              <el-button type="primary" @click="confirmOrderSelection" :disabled="!hasSelectedOrders()">
                 下一步
               </el-button>
             </div>
@@ -59,13 +59,13 @@
             <div class="card-header">
               <h3>採購建議</h3>
               <div class="actions">
-                <el-button @click="currentStep = 1">上一步</el-button>
-                <el-button type="primary" @click="currentStep = 3">下一步</el-button>
+                <el-button @click="handlePreviousStep">上一步</el-button>
+                <el-button type="primary" @click="confirmProcurementSuggestions">下一步</el-button>
               </div>
             </div>
           </template>
 
-          <el-table :data="filteredProcurementSuggestions" style="width: 100%">
+          <el-table :data="procurementStore.filteredSuggestions" style="width: 100%">
             <el-table-column prop="id" label="商品編號" width="120" />
             <el-table-column prop="name" label="商品名稱">
               <template #default="{ row }">
@@ -74,8 +74,32 @@
               </template>
             </el-table-column>
             <el-table-column prop="currentStock" label="目前庫存" width="100" />
-            <el-table-column prop="orderedQty" label="訂單需求" width="100" />
-            <el-table-column prop="suggestedQty" label="建議數量" width="100" />
+            <el-table-column label="訂單需求" width="100">
+              <template #default="{ row }">
+                {{ procurementStore.orderedQuantity(row.id) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="建議數量" width="100">
+              <template #default="{ row }">
+                {{ procurementStore.suggestedQuantity(row.id) }}
+              </template>
+            </el-table-column>
+            <el-table-column label="供應商" width="150">
+              <template #default="{ row }">
+                <el-select 
+                  v-model="row.selectedSupplierId" 
+                  size="small"
+                  @change="handleSupplierChange(row, $event)"
+                >
+                  <el-option
+                    v-for="supplier in procurementStore.itemSuppliers(row)"
+                    :key="supplier.id"
+                    :label="supplier.name"
+                    :value="supplier.id"
+                  />
+                </el-select>
+              </template>
+            </el-table-column>
             <el-table-column prop="purchaseQty" label="採購數量" width="120">
               <template #default="{ row }">
                 <el-input-number 
@@ -83,6 +107,7 @@
                   :min="0" 
                   :max="999"
                   size="small"
+                  @change="handlePurchaseQtyChange(row, $event)"
                 />
               </template>
             </el-table-column>
@@ -105,13 +130,13 @@
           <template #header>
             <div class="card-header">
               <h3>訂單明細</h3>
-              <el-tag type="success">{{ selectedOrders.length }} 筆訂單</el-tag>
+              <el-tag type="success">{{ procurementStore.selectedOrders.length }} 筆訂單</el-tag>
             </div>
           </template>
 
           <el-collapse>
             <el-collapse-item
-              v-for="order in selectedOrders"
+              v-for="order in procurementStore.selectedOrders"
               :key="order.id"
               :title="order.id"
             >
@@ -156,15 +181,18 @@
             <div class="card-header">
               <h3>進貨單預覽</h3>
               <div class="actions">
-                <el-button @click="currentStep = 2">上一步</el-button>
+                <el-button @click="handlePreviousStep">上一步</el-button>
                 <el-button type="primary" @click="generatePurchaseOrders">確認送出</el-button>
               </div>
             </div>
           </template>
 
-          <el-tabs v-model="activeSupplier">
+          <el-tabs 
+            v-model="activeSupplier"
+            v-if="procurementStore.activeSuppliers.length > 0"
+          >
             <el-tab-pane 
-              v-for="supplier in suppliers" 
+              v-for="supplier in procurementStore.activeSuppliers" 
               :key="supplier.id"
               :label="supplier.name"
               :name="supplier.id"
@@ -186,7 +214,12 @@
                 </el-descriptions>
               </div>
 
-              <el-table :data="getSupplierItems(supplier.id)" style="width: 100%; margin-top: 16px">
+              <el-table 
+                :data="procurementStore.filteredSuggestions.filter(item => 
+                  item.selectedSupplierId === supplier.id && item.purchaseQty > 0
+                )" 
+                style="width: 100%; margin-top: 16px"
+              >
                 <el-table-column prop="name" label="商品名稱" />
                 <el-table-column prop="purchaseQty" label="數量" width="120" />
                 <el-table-column prop="price" label="單價" width="120">
@@ -204,15 +237,24 @@
               <div class="supplier-summary">
                 <div class="summary-item">
                   <span>採購總數：</span>
-                  <span class="value">{{ getSupplierTotalQuantity(supplier.id) }} 瓶</span>
+                  <span class="value">{{ 
+                    procurementStore.filteredSuggestions
+                      .filter(item => item.selectedSupplierId === supplier.id)
+                      .reduce((sum, item) => sum + (item.purchaseQty || 0), 0)
+                  }} 瓶</span>
                 </div>
                 <div class="summary-item">
                   <span>採購總額：</span>
-                  <span class="amount">NT$ {{ formatNumber(getSupplierTotal(supplier.id)) }}</span>
+                  <span class="amount">NT$ {{ formatNumber(
+                    procurementStore.filteredSuggestions
+                      .filter(item => item.selectedSupplierId === supplier.id)
+                      .reduce((sum, item) => sum + (item.price * (item.purchaseQty || 0)), 0)
+                  ) }}</span>
                 </div>
               </div>
             </el-tab-pane>
           </el-tabs>
+          <el-empty v-else description="沒有需要採購的商品" />
         </el-card>
       </template>
     </div>
@@ -256,17 +298,29 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { usePurchaseOrderStore } from '@/stores/modules/purchaseOrder'
 import { useOrderStore } from '@/stores/modules/order'
+import { useProcurementStore } from '@/stores/modules/procurement'
 
 // Store
 const purchaseOrderStore = usePurchaseOrderStore()
 const orderStore = useOrderStore()
+const procurementStore = useProcurementStore()
 
 // 當前步驟
-const currentStep = ref(1)
+const currentStep = computed(() => procurementStore.currentStep)
+
+// 當前選中的供應商
+const activeSupplier = ref('')
+
+// 監聽步驟變化，當進入第三步時自動選擇第一個供應商
+watch(currentStep, (newStep) => {
+  if (newStep === 3 && procurementStore.activeSuppliers.length > 0) {
+    activeSupplier.value = procurementStore.activeSuppliers[0].id
+  }
+})
 
 // Mock 數據：待處理訂單
 const pendingOrders = ref([
@@ -338,117 +392,35 @@ const pendingOrders = ref([
   }
 ])
 
-// 選中的訂單
-const selectedOrders = ref([])
-
-// 採購建議
-const procurementSuggestions = ref([
-  {
-    id: 'P001',
-    name: '法國波爾多紅酒 2018',
-    currentStock: 0,
-    price: 2580,
-    isJIT: true,
-    supplierId: 'S001',
-    safetyStock: 0,
-    last30DaysSales: 24,
-    incomingStock: 0
-  },
-  {
-    id: 'P002',
-    name: '意大利白葡萄酒 2021',
-    currentStock: 0,
-    price: 1680,
-    isJIT: true,
-    supplierId: 'S002',
-    safetyStock: 0,
-    last30DaysSales: 18,
-    incomingStock: 0
-  },
-  {
-    id: 'P003',
-    name: '獺祭 純米大吟釀 45',
-    currentStock: 2,
-    price: 1580,
-    isJIT: false,
-    supplierId: 'S003',
-    safetyStock: 6,
-    last30DaysSales: 36,
-    incomingStock: 0
-  },
-  {
-    id: 'P004',
-    name: '久保田 千寿',
-    currentStock: 3,
-    price: 1280,
-    isJIT: false,
-    supplierId: 'S003',
-    safetyStock: 6,
-    last30DaysSales: 24,
-    incomingStock: 0
-  }
-])
-
-// 供應商資料
-const suppliers = ref([
-  { 
-    id: 'S001', 
-    name: '法國酒商',
-    phone: '02-2345-6789',
-    paymentTerm: '月結30天'
-  },
-  { 
-    id: 'S002', 
-    name: '義大利酒商',
-    phone: '02-3456-7890',
-    paymentTerm: '月結45天'
-  },
-  { 
-    id: 'S003', 
-    name: '日本酒商',
-    phone: '02-4567-8901',
-    paymentTerm: '月結60天'
-  }
-])
-
-const activeSupplier = ref('S001')
+// 商品詳情相關
 const itemDetailVisible = ref(false)
 const selectedItem = ref(null)
 
-// 是否有選中訂單
-const hasSelectedOrders = computed(() => selectedOrders.value.length > 0)
-
 // 處理訂單選擇變更
 const handleOrderSelectionChange = (orders) => {
-  selectedOrders.value = orders
+  procurementStore.setSelectedOrders(orders)
 }
 
 // 確認訂單選擇
 const confirmOrderSelection = () => {
-  if (selectedOrders.value.length === 0) {
+  if (!hasSelectedOrders()) {
     ElMessage.warning('請至少選擇一筆訂單')
     return
   }
-  currentStep.value = 2
+  procurementStore.setCurrentStep(2)
 }
 
-// 獲取供應商商品
-const getSupplierItems = (supplierId) => {
-  return procurementSuggestions.value.filter(item => item.supplierId === supplierId)
+// 是否有選中訂單
+const hasSelectedOrders = () => procurementStore.selectedOrders.length > 0
+
+// 處理採購數量變更
+const handlePurchaseQtyChange = (item, value) => {
+  procurementStore.updatePurchaseQuantity(item.id, value)
 }
 
-// 計算供應商總金額
-const getSupplierTotal = (supplierId) => {
-  return getSupplierItems(supplierId).reduce((sum, item) => {
-    return sum + (item.price * item.purchaseQty)
-  }, 0)
-}
-
-// 計算供應商總數量
-const getSupplierTotalQuantity = (supplierId) => {
-  return getSupplierItems(supplierId).reduce((sum, item) => {
-    return sum + item.purchaseQty
-  }, 0)
+// 處理供應商變更
+const handleSupplierChange = (item, supplierId) => {
+  procurementStore.updateSelectedSupplier(item.id, supplierId)
 }
 
 // 顯示商品詳情
@@ -459,20 +431,20 @@ const showItemDetail = (item) => {
 
 // 生成進貨單
 const generatePurchaseOrders = () => {
-  // 按供應商分組商品
-  const supplierGroups = {}
-  procurementSuggestions.value.forEach(item => {
-    if (item.purchaseQty > 0) {
-      if (!supplierGroups[item.supplierId]) {
-        supplierGroups[item.supplierId] = []
-      }
-      supplierGroups[item.supplierId].push(item)
-    }
-  })
+  const activeSuppliers = procurementStore.activeSuppliers
+  
+  // 檢查是否有需要採購的商品
+  if (activeSuppliers.length === 0) {
+    ElMessage.warning('沒有需要採購的商品')
+    return
+  }
 
   // 為每個供應商創建進貨單
-  Object.entries(supplierGroups).forEach(([supplierId, items]) => {
-    const supplier = suppliers.value.find(s => s.id === supplierId)
+  activeSuppliers.forEach(supplier => {
+    const items = procurementStore.filteredSuggestions.filter(item => 
+      item.selectedSupplierId === supplier.id && item.purchaseQty > 0
+    )
+
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
 
@@ -487,18 +459,43 @@ const generatePurchaseOrders = () => {
       items,
       totalAmount,
       expectedDeliveryDate: tomorrow.toISOString(),
-      relatedOrders: selectedOrders.value
+      relatedOrders: procurementStore.selectedOrders
     })
   })
 
   // 更新所有選中訂單的狀態為備貨中
-  selectedOrders.value.forEach(order => {
+  procurementStore.selectedOrders.forEach(order => {
     orderStore.updateOrderStatus(order.id, 'preparing')
   })
 
-  currentStep.value = 1
-  selectedOrders.value = []
+  procurementStore.reset()
+  activeSupplier.value = '' // 清除當前選中的供應商
   ElMessage.success('進貨單已生成，相關訂單已更新為備貨中')
+}
+
+// 修改確認採購建議的函數
+const confirmProcurementSuggestions = () => {
+  const hasItems = procurementStore.filteredSuggestions.some(item => {
+    const suggestedQty = procurementStore.suggestedQuantity(item.id)
+    return suggestedQty > 0 && item.purchaseQty > 0
+  })
+  
+  if (!hasItems) {
+    ElMessage.warning('請至少設定一項商品的採購數量')
+    return
+  }
+
+  procurementStore.setCurrentStep(3)
+}
+
+// 修改返回上一步的處理
+const handlePreviousStep = () => {
+  if (currentStep.value === 3) {
+    activeSupplier.value = '' // 清除當前選中的供應商
+    procurementStore.setCurrentStep(2)
+  } else if (currentStep.value === 2) {
+    procurementStore.setCurrentStep(1)
+  }
 }
 
 // 格式化日期
@@ -521,33 +518,6 @@ const formatNumber = (num) => {
 
 // 表格 ref
 const orderTable = ref(null)
-
-// 根據選中訂單過濾的採購建議
-const filteredProcurementSuggestions = computed(() => {
-  // 獲取所有選中訂單中的商品及其總數量
-  const selectedProducts = new Map() // Map<商品ID, 訂單總數量>
-  selectedOrders.value.forEach(order => {
-    order.products.forEach(product => {
-      const currentQty = selectedProducts.get(product.id) || 0
-      selectedProducts.set(product.id, currentQty + product.quantity)
-    })
-  })
-
-  // 計算建議採購量並過濾商品
-  return procurementSuggestions.value
-    .filter(suggestion => selectedProducts.has(suggestion.id))
-    .map(suggestion => {
-      const orderedQty = selectedProducts.get(suggestion.id) || 0
-      const remainingStock = suggestion.currentStock - orderedQty
-      
-      return {
-        ...suggestion,
-        orderedQty,
-        suggestedQty: remainingStock < 0 ? Math.abs(remainingStock) : 0,
-        purchaseQty: remainingStock < 0 ? Math.abs(remainingStock) : 0
-      }
-    })
-})
 
 // 在組件掛載後預設選中所有訂單
 onMounted(async () => {
