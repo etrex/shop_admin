@@ -10,9 +10,9 @@
     <!-- 訂單列表 -->
     <el-table :data="orders" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="訂單編號" width="120" />
-      <el-table-column prop="created_at" label="建立時間" width="180">
+      <el-table-column label="建立時間" width="180">
         <template #default="{ row }">
-          {{ formatDate(row.created_at) }}
+          {{ formatDate(row.createdAt) }}
         </template>
       </el-table-column>
       <el-table-column prop="total" label="訂單金額" width="120">
@@ -68,15 +68,29 @@ const userStore = useUserStore()
 const orderStore = useOrderStore()
 
 // 列表數據
-const orders = computed(() => orderStore.getAllOrders)
+const orders = computed(() => {
+  const allOrders = orderStore.getAllOrders
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return allOrders.slice(start, end)
+})
 const loading = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
-const total = computed(() => orders.value.length)
+const total = computed(() => orderStore.getAllOrders.length)
 
 // 格式化日期
-const formatDate = (date) => {
-  return new Date(date).toLocaleString()
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return 'Invalid Date'
+  
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}`
 }
 
 // 格式化數字
@@ -88,7 +102,9 @@ const formatNumber = (num) => {
 const getStatusLabel = (status) => {
   const statusMap = {
     pending: '待處理',
+    confirmed: '已確認',
     processing: '處理中',
+    shipped: '已出貨',
     completed: '已完成',
     cancelled: '已取消'
   }
@@ -99,11 +115,13 @@ const getStatusLabel = (status) => {
 const getStatusType = (status) => {
   const typeMap = {
     pending: 'warning',
+    confirmed: 'info',
     processing: 'primary',
+    shipped: 'success',
     completed: 'success',
-    cancelled: 'info'
+    cancelled: 'danger'
   }
-  return typeMap[status] || 'default'
+  return typeMap[status] || 'info'
 }
 
 // 獲取付款方式標籤
@@ -123,13 +141,12 @@ const viewOrderDetail = (orderId) => {
 // 處理頁碼變更
 const handleCurrentChange = (page) => {
   currentPage.value = page
-  fetchOrders()
 }
 
 // 處理每頁筆數變更
 const handleSizeChange = (size) => {
   pageSize.value = size
-  fetchOrders()
+  currentPage.value = 1
 }
 
 // 獲取訂單列表
