@@ -1,0 +1,28 @@
+# Development Rules
+
+## Documentation First
+1. Before starting any task, always read these documents in order:
+   - requirement.md
+   - spec.md
+   - technical_spec.md
+2. After reading the core documents, read task-related files and components
+
+## CSS Rules
+1. DO NOT use @import or @use in any CSS/SCSS files
+2. All styles should be written directly in the component or in dedicated style files
+3. Use scoped styles in Vue components when possible
+
+## Code Organization
+1. Keep components focused and single-responsibility
+2. Follow Vue 3 Composition API best practices
+3. Use clear and descriptive variable and function names
+4. Keep consistent naming conventions
+5. DO NOT use TypeScript - this project uses pure JavaScript
+6. Minimize code reuse - this is a prototype project, prefer direct implementation over shared code
+7. This is a frontend-only prototype - all data will be cleared on page refresh
+8. DO NOT call any external APIs - this is a standalone frontend prototype
+
+## Version Control
+1. Write meaningful commit messages
+2. Keep commits atomic and focused
+3. Follow conventional commit format 
