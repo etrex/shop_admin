@@ -65,6 +65,36 @@ const router = createRouter({
           path: 'supplier-evaluation',
           name: 'supplier-evaluation',
           component: () => import('@/views/task/SupplierEvaluationView.vue')
+        },
+        {
+          path: 'daily-procurement',
+          name: 'daily-procurement',
+          component: () => import('@/views/task/DailyProcurementView.vue')
+        },
+        {
+          path: 'box-completion',
+          name: 'box-completion',
+          component: () => import('@/views/task/BoxCompletionView.vue')
+        },
+        {
+          path: 'stock-monitor',
+          name: 'stock-monitor',
+          component: () => import('@/views/task/StockMonitorView.vue')
+        },
+        {
+          path: 'supplier-management',
+          name: 'supplier-management',
+          component: () => import('@/views/task/SupplierManagementView.vue')
+        },
+        {
+          path: 'procurement-analysis',
+          name: 'procurement-analysis',
+          component: () => import('@/views/task/ProcurementAnalysisView.vue')
+        },
+        {
+          path: 'purchase-orders',
+          name: 'purchase-orders',
+          component: () => import('@/views/task/PurchaseOrderListView.vue')
         }
       ]
     },

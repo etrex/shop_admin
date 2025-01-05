@@ -13,41 +13,103 @@
           <h3>今日任務</h3>
         </div>
 
-        <el-menu-item index="confirm-new-order">
-          <el-icon><Document /></el-icon>
-          <template #title>
-            <div class="task-item">
-              <span>確認新訂單</span>
-              <el-badge
-                v-if="pendingOrdersCount > 0"
-                :value="pendingOrdersCount"
-                class="order-badge"
-                type="warning"
-              />
-            </div>
-          </template>
-        </el-menu-item>
+        <!-- 客服任務 -->
+        <template v-if="isCustomerService">
+          <el-menu-item index="confirm-new-order">
+            <el-icon><Document /></el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>確認新訂單</span>
+                <el-badge
+                  v-if="pendingOrdersCount > 0"
+                  :value="pendingOrdersCount"
+                  class="order-badge"
+                  type="warning"
+                />
+              </div>
+            </template>
+          </el-menu-item>
 
-        <el-menu-item index="return-request">
-          <el-icon><RefreshRight /></el-icon>
-          <template #title>
-            <span>處理退貨申請</span>
-          </template>
-        </el-menu-item>
+          <el-menu-item index="return-request">
+            <el-icon><RefreshRight /></el-icon>
+            <template #title>
+              <span>處理退貨申請</span>
+            </template>
+          </el-menu-item>
+        </template>
+
+        <!-- 採購任務 -->
+        <template v-if="isProcurement">
+          <el-menu-item index="daily-procurement">
+            <el-icon><ShoppingCart /></el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>日採購作業</span>
+                <el-badge
+                  v-if="pendingProcurementCount > 0"
+                  :value="pendingProcurementCount"
+                  class="order-badge"
+                  type="warning"
+                />
+              </div>
+            </template>
+          </el-menu-item>
+
+          <el-menu-item index="box-completion">
+            <el-icon><Box /></el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>湊箱建議</span>
+                <el-badge
+                  v-if="boxCompletionCount > 0"
+                  :value="boxCompletionCount"
+                  class="order-badge"
+                  type="success"
+                />
+              </div>
+            </template>
+          </el-menu-item>
+
+          <el-menu-item index="purchase-orders">
+            <el-icon><Document /></el-icon>
+            <template #title>進貨單列表</template>
+          </el-menu-item>
+        </template>
 
         <div class="menu-header">
           <h3>待處理任務</h3>
         </div>
 
-        <el-menu-item index="stock-check">
-          <el-icon><Box /></el-icon>
-          <template #title>庫存盤點</template>
-        </el-menu-item>
+        <!-- 採購人員功能 -->
+        <template v-if="isProcurement">
+          <el-menu-item index="stock-monitor">
+            <el-icon><Monitor /></el-icon>
+            <template #title>庫存監控</template>
+          </el-menu-item>
 
-        <el-menu-item index="supplier-evaluation">
-          <el-icon><ShoppingCart /></el-icon>
-          <template #title>供應商評估</template>
-        </el-menu-item>
+          <el-menu-item index="supplier-management">
+            <el-icon><Connection /></el-icon>
+            <template #title>供應商管理</template>
+          </el-menu-item>
+
+          <el-menu-item index="procurement-analysis">
+            <el-icon><DataLine /></el-icon>
+            <template #title>採購分析</template>
+          </el-menu-item>
+        </template>
+
+        <!-- 客服人員功能 -->
+        <template v-if="isCustomerService">
+          <el-menu-item index="stock-check">
+            <el-icon><Box /></el-icon>
+            <template #title>庫存盤點</template>
+          </el-menu-item>
+
+          <el-menu-item index="supplier-evaluation">
+            <el-icon><ShoppingCart /></el-icon>
+            <template #title>供應商評估</template>
+          </el-menu-item>
+        </template>
       </template>
 
       <!-- 消費者選單 -->
@@ -93,7 +155,10 @@ import {
   Goods,
   Plus,
   Expand,
-  Fold
+  Fold,
+  Monitor,
+  Connection,
+  DataLine
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -104,11 +169,19 @@ const isCollapse = ref(false)
 
 // 判斷是否為消費者
 const isCustomer = computed(() => userStore.currentRole === 'customer')
+const isCustomerService = computed(() => userStore.currentRole === 'customer-service')
+const isProcurement = computed(() => userStore.currentRole === 'procurement')
 
 // 計算待處理訂單數量
 const pendingOrdersCount = computed(() => {
   return orderStore.getPendingOrders.length
 })
+
+// Mock 數據：待處理採購數量
+const pendingProcurementCount = computed(() => 2)
+
+// Mock 數據：湊箱建議數量
+const boxCompletionCount = computed(() => 3)
 
 const activeMenu = computed(() => {
   const path = route.path.split('/')
@@ -123,11 +196,29 @@ const handleSelect = (index) => {
     case 'return-request':
       router.push('/task/return-request')
       break
+    case 'daily-procurement':
+      router.push('/task/daily-procurement')
+      break
+    case 'box-completion':
+      router.push('/task/box-completion')
+      break
+    case 'stock-monitor':
+      router.push('/task/stock-monitor')
+      break
+    case 'supplier-management':
+      router.push('/task/supplier-management')
+      break
+    case 'procurement-analysis':
+      router.push('/task/procurement-analysis')
+      break
     case 'stock-check':
       router.push('/task/stock-check')
       break
     case 'supplier-evaluation':
       router.push('/task/supplier-evaluation')
+      break
+    case 'purchase-orders':
+      router.push('/task/purchase-orders')
       break
     default:
       router.push(`/${index}`)
