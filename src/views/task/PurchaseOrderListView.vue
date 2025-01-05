@@ -58,7 +58,7 @@
                 size="small"
                 class="product-tag"
               >
-                {{ item.name }} x {{ item.boxQty }}箱
+                {{ item.name }} x {{ item.purchaseQty }}
               </el-tag>
             </template>
           </el-table-column>
@@ -140,12 +140,7 @@
 
         <el-table :data="selectedPurchaseOrder.items" style="width: 100%; margin-top: 16px">
           <el-table-column prop="name" label="商品名稱" />
-          <el-table-column prop="boxQty" label="箱數" width="120" />
-          <el-table-column prop="totalQty" label="總數量" width="120">
-            <template #default="{ row }">
-              {{ row.boxQty * 6 }}
-            </template>
-          </el-table-column>
+          <el-table-column prop="purchaseQty" label="數量" width="120" />
           <el-table-column prop="price" label="單價" width="120">
             <template #default="{ row }">
               NT$ {{ formatNumber(row.price) }}
@@ -153,7 +148,7 @@
           </el-table-column>
           <el-table-column label="小計" width="120">
             <template #default="{ row }">
-              NT$ {{ formatNumber(row.price * row.boxQty * 6) }}
+              NT$ {{ formatNumber(row.price * row.purchaseQty) }}
             </template>
           </el-table-column>
         </el-table>
@@ -161,11 +156,7 @@
         <div class="summary">
           <div class="summary-item">
             <span>商品總數：</span>
-            <span class="value">{{ getTotalQuantity(selectedPurchaseOrder) }} 件</span>
-          </div>
-          <div class="summary-item">
-            <span>箱數總計：</span>
-            <span class="value">{{ getTotalBoxes(selectedPurchaseOrder) }} 箱</span>
+            <span class="value">{{ getTotalQuantity(selectedPurchaseOrder) }} 瓶</span>
           </div>
           <div class="summary-item">
             <span>採購總額：</span>
@@ -340,7 +331,7 @@ const getStatusType = (status) => {
 // 計算總數量
 const getTotalQuantity = (purchaseOrder) => {
   return purchaseOrder.items.reduce((sum, item) => {
-    return sum + (item.boxQty * 6)
+    return sum + (item.purchaseQty || 0)
   }, 0)
 }
 

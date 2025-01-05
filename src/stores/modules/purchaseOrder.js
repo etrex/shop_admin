@@ -21,10 +21,22 @@ export const usePurchaseOrderStore = defineStore('purchaseOrder', () => {
     const sequence = (purchaseOrders.value.length + 1).toString().padStart(3, '0')
     const purchaseOrderId = `PO-${dateStr}-${sequence}`
 
+    // 確保所有商品數據都包含正確的採購數量
+    const items = orderData.items.map(item => ({
+      id: item.id,
+      name: item.name,
+      purchaseQty: item.purchaseQty || 0,  // 確保有採購數量
+      price: item.price
+    }))
+
     const purchaseOrder = {
       id: purchaseOrderId,
       createdAt: new Date().toISOString(),
-      ...orderData,
+      supplier: orderData.supplier,
+      items,
+      totalAmount: orderData.totalAmount,
+      expectedDeliveryDate: orderData.expectedDeliveryDate,
+      relatedOrders: orderData.relatedOrders,
       status: 'pending'
     }
 
