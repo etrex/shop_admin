@@ -6,97 +6,66 @@
       :collapse="isCollapse"
       @select="handleSelect"
     >
+      <!-- 管理員選單 -->
+      <template v-if="!isCustomer">
+        <!-- 今日任務 -->
+        <div class="menu-header">
+          <h3>今日任務</h3>
+        </div>
+
+        <el-menu-item index="confirm-new-order">
+          <el-icon><Document /></el-icon>
+          <template #title>
+            <div class="task-item">
+              <span>確認新訂單</span>
+              <el-badge
+                v-if="pendingOrdersCount > 0"
+                :value="pendingOrdersCount"
+                class="order-badge"
+                type="warning"
+              />
+            </div>
+          </template>
+        </el-menu-item>
+
+        <el-menu-item index="return-request">
+          <el-icon><RefreshRight /></el-icon>
+          <template #title>
+            <span>處理退貨申請</span>
+          </template>
+        </el-menu-item>
+
+        <div class="menu-header">
+          <h3>待處理任務</h3>
+        </div>
+
+        <el-menu-item index="stock-check">
+          <el-icon><Box /></el-icon>
+          <template #title>庫存盤點</template>
+        </el-menu-item>
+
+        <el-menu-item index="supplier-evaluation">
+          <el-icon><ShoppingCart /></el-icon>
+          <template #title>供應商評估</template>
+        </el-menu-item>
+      </template>
+
       <!-- 消費者選單 -->
-      <template v-if="isCustomer">
+      <template v-else>
         <el-menu-item index="order-list">
-          <el-icon><document /></el-icon>
+          <el-icon><Document /></el-icon>
           <template #title>我的訂單</template>
         </el-menu-item>
 
         <el-menu-item index="product-list">
-          <el-icon><goods /></el-icon>
+          <el-icon><Goods /></el-icon>
           <template #title>商品列表</template>
         </el-menu-item>
         
         <el-menu-item index="order-create">
-          <el-icon><plus /></el-icon>
+          <el-icon><Plus /></el-icon>
           <template #title>建立訂單</template>
         </el-menu-item>
-      </template>
-
-      <!-- 管理員選單 -->
-      <template v-else>
-        <!-- Task List Section -->
-        <el-sub-menu index="tasks">
-          <template #title>
-            <el-icon><list /></el-icon>
-            <span>任務列表</span>
-            <el-badge :value="pendingTasksCount" class="task-badge" />
-          </template>
-          
-          <el-menu-item-group title="今日任務">
-            <el-menu-item v-for="task in todayTasks" :key="task.id" :index="`task-${task.id}`">
-              <el-icon>
-                <component :is="icons[task.icon]" />
-              </el-icon>
-              <template #title>
-                <div class="task-item">
-                  <span>{{ task.title }}</span>
-                  <el-tag size="small" :type="task.priority">{{ task.priority }}</el-tag>
-                </div>
-              </template>
-            </el-menu-item>
-          </el-menu-item-group>
-          
-          <el-menu-item-group title="待處理任務">
-            <el-menu-item v-for="task in pendingTasks" :key="task.id" :index="`task-${task.id}`">
-              <el-icon>
-                <component :is="icons[task.icon]" />
-              </el-icon>
-              <template #title>
-                <div class="task-item">
-                  <span>{{ task.title }}</span>
-                  <el-tag size="small" :type="task.priority">{{ task.priority }}</el-tag>
-                </div>
-              </template>
-            </el-menu-item>
-          </el-menu-item-group>
-        </el-sub-menu>
-
-        <!-- Main Navigation -->
-        <el-menu-item index="dashboard">
-          <el-icon><odometer /></el-icon>
-          <template #title>儀表板</template>
-        </el-menu-item>
-        
-        <el-sub-menu index="order">
-          <template #title>
-            <el-icon><document /></el-icon>
-            <span>訂單管理</span>
-          </template>
-          <el-menu-item index="order-list">訂單列表</el-menu-item>
-          <el-menu-item index="order-create">建立訂單</el-menu-item>
-        </el-sub-menu>
-        
-        <el-sub-menu index="inventory">
-          <template #title>
-            <el-icon><box /></el-icon>
-            <span>庫存管理</span>
-          </template>
-          <el-menu-item index="inventory-list">庫存列表</el-menu-item>
-          <el-menu-item index="inventory-movement">庫存異動</el-menu-item>
-          <el-menu-item index="inventory-transfer">庫存調撥</el-menu-item>
-        </el-sub-menu>
-        
-        <el-sub-menu index="procurement">
-          <template #title>
-            <el-icon><shopping-cart /></el-icon>
-            <span>採購管理</span>
-          </template>
-          <el-menu-item index="procurement-create">建立採購單</el-menu-item>
-          <el-menu-item index="procurement-list">採購單列表</el-menu-item>
-          <el-menu-item index="supplier">供應商管理</el-menu-item>
-        </el-sub-menu>
       </template>
     </el-menu>
 
@@ -115,99 +84,58 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/modules/user'
+import { useOrderStore } from '@/stores/modules/order'
 import {
-  List,
-  Plus,
+  Document,
+  RefreshRight,
   Box,
   ShoppingCart,
-  Odometer,
-  Document,
+  Goods,
+  Plus,
   Expand,
-  Fold,
-  Warning,
-  Goods
+  Fold
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
+const orderStore = useOrderStore()
 const isCollapse = ref(false)
 
 // 判斷是否為消費者
 const isCustomer = computed(() => userStore.currentRole === 'customer')
 
-const activeMenu = computed(() => {
-  // 如果是消費者且在首頁，預設選中「我的訂單」
-  if (isCustomer.value && route.path === '/') {
-    return 'order-list'
-  }
-  // 從路由路徑獲取當前選中項
-  const path = route.path.split('/')
-  return path[1] || (isCustomer.value ? 'order-list' : 'dashboard')
+// 計算待處理訂單數量
+const pendingOrdersCount = computed(() => {
+  return orderStore.getPendingOrders.length
 })
 
-// Mock tasks data
-const todayTasks = ref([
-  {
-    id: 1,
-    title: '確認新訂單',
-    priority: 'warning',
-    icon: 'document',
-    route: 'confirm-new-order'
-  },
-  {
-    id: 2,
-    title: '處理退貨申請',
-    priority: 'danger',
-    icon: 'warning',
-    route: 'return-request'
-  }
-])
-
-const pendingTasks = ref([
-  {
-    id: 3,
-    title: '庫存盤點',
-    priority: 'info',
-    icon: 'box',
-    route: 'stock-check'
-  },
-  {
-    id: 4,
-    title: '供應商評估',
-    priority: 'success',
-    icon: 'shopping-cart',
-    route: 'supplier-evaluation'
-  }
-])
-
-const pendingTasksCount = computed(() => {
-  return todayTasks.value.length + pendingTasks.value.length
+const activeMenu = computed(() => {
+  const path = route.path.split('/')
+  return path[path.length - 1] || 'dashboard'
 })
 
 const handleSelect = (index) => {
-  if (index.startsWith('task-')) {
-    // 處理任務選擇
-    const taskId = parseInt(index.split('-')[1])
-    const task = [...todayTasks.value, ...pendingTasks.value].find(t => t.id === taskId)
-    if (task && task.route) {
-      router.push({ name: task.route })
-    }
-  } else {
-    // 處理一般導航
-    router.push({ name: index })
+  switch (index) {
+    case 'confirm-new-order':
+      router.push('/task/confirm-new-order')
+      break
+    case 'return-request':
+      router.push('/task/return-request')
+      break
+    case 'stock-check':
+      router.push('/task/stock-check')
+      break
+    case 'supplier-evaluation':
+      router.push('/task/supplier-evaluation')
+      break
+    default:
+      router.push(`/${index}`)
   }
 }
 
 const toggleCollapse = () => {
   isCollapse.value = !isCollapse.value
-}
-
-const icons = {
-  document: Document,
-  warning: Warning,
-  box: Box,
-  'shopping-cart': ShoppingCart
 }
 </script>
 
@@ -216,43 +144,54 @@ const icons = {
   height: 100%;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--border-light);
+  border-right: 1px solid var(--el-border-color-light);
 }
 
 .sidebar-menu {
   flex: 1;
   border-right: none;
+
+  :deep(.el-menu-item) {
+    * {
+      vertical-align: middle;
+    }
+  }
+}
+
+.menu-header {
+  padding: 16px;
+  h3 {
+    margin: 0;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+  }
 }
 
 .task-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
+  position: relative;
 }
 
-.task-badge {
-  position: absolute;
-  right: 20px;
-  top: 50%;
-  transform: translateY(-50%);
+.order-badge {
+  :deep(.el-badge__content) {
+    height: 16px !important;
+    line-height: 16px !important;
+    padding: 0 4px !important;
+    border: none !important;
+    right: -24px !important;
+  }
 }
 
 .sidebar-footer {
   padding: 12px;
   display: flex;
   justify-content: center;
-  border-top: 1px solid var(--border-light);
+  border-top: 1px solid var(--el-border-color-light);
 }
 
-/* Override element-plus styles */
-.el-menu {
-  --el-menu-hover-bg-color: var(--background-base);
-}
-
-.el-menu-item-group__title {
-  padding: 8px 20px;
-  font-size: 12px;
-  color: var(--text-secondary);
+:deep(.el-badge__content) {
+  z-index: 1;
 }
 </style> 
