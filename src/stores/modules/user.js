@@ -36,7 +36,13 @@ export const useUserStore = defineStore('user', {
     currentRole: 'customer',
     userInfo: {
       name: '訪客',
-      avatar: ''
+      avatar: '',
+      // 消費者詳細資訊
+      customerInfo: {
+        name: '王小明',
+        phone: '0912-345-678',
+        address: '台北市信義區信義路五段7號'
+      }
     },
     roles
   }),

@@ -22,17 +22,11 @@
           </div>
         </template>
         
-        <el-form-item label="姓名" prop="customer.name">
-          <el-input v-model="form.customer.name" placeholder="請輸入姓名" />
-        </el-form-item>
-        
-        <el-form-item label="電話" prop="customer.phone">
-          <el-input v-model="form.customer.phone" placeholder="請輸入電話" />
-        </el-form-item>
-        
-        <el-form-item label="地址" prop="customer.address">
-          <el-input v-model="form.customer.address" placeholder="請輸入地址" />
-        </el-form-item>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="姓名">{{ customerInfo.name }}</el-descriptions-item>
+          <el-descriptions-item label="電話">{{ customerInfo.phone }}</el-descriptions-item>
+          <el-descriptions-item label="地址" :span="2">{{ customerInfo.address }}</el-descriptions-item>
+        </el-descriptions>
       </el-card>
 
       <!-- 商品選擇 -->
@@ -154,9 +148,15 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '@/stores/modules/user'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const userStore = useUserStore()
+const customerInfo = computed(() => userStore.userInfo.customerInfo)
 
 // 模擬商品數據
 const products = ref([
@@ -170,11 +170,11 @@ const submitting = ref(false)
 
 // 表單數據
 const form = reactive({
-  customer: {
-    name: '',
-    phone: '',
-    address: ''
-  },
+  customer: computed(() => ({
+    name: customerInfo.value.name,
+    phone: customerInfo.value.phone,
+    address: customerInfo.value.address
+  })),
   products: [
     {
       id: '',
@@ -192,15 +192,6 @@ const form = reactive({
 
 // 表單驗證規則
 const rules = {
-  'customer.name': [
-    { required: true, message: '請輸入姓名', trigger: 'blur' }
-  ],
-  'customer.phone': [
-    { required: true, message: '請輸入電話', trigger: 'blur' }
-  ],
-  'customer.address': [
-    { required: true, message: '請輸入地址', trigger: 'blur' }
-  ],
   product: [
     { required: true, message: '請選擇商品', trigger: 'change' }
   ],
@@ -264,7 +255,8 @@ const submitOrder = async () => {
     console.log('訂單資料：', form)
     
     ElMessage.success('訂單提交成功')
-    // TODO: 導向訂單列表或訂單詳情頁
+    // 導向訂單列表頁面
+    router.push({ name: 'order-list' })
   } catch (error) {
     console.error('表單驗證失敗：', error)
     ElMessage.error('請檢查表單填寫是否正確')
