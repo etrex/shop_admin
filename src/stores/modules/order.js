@@ -4,7 +4,9 @@ import { ElMessage } from 'element-plus'
 export const useOrderStore = defineStore('order', {
   state: () => ({
     orders: [],
-    loading: false
+    loading: false,
+    // 溝通紀錄映射表，key 為訂單 ID
+    communications: {}
   }),
 
   getters: {
@@ -12,10 +14,98 @@ export const useOrderStore = defineStore('order', {
     
     getOrderById: (state) => (orderId) => {
       return state.orders.find(order => order.id === orderId)
+    },
+
+    // 獲取訂單的溝通紀錄
+    getCommunications: (state) => (orderId) => {
+      return state.communications[orderId] || []
+    },
+
+    // 獲取待處理的訂單
+    getPendingOrders: (state) => {
+      return state.orders.filter(order => order.status === 'pending')
     }
   },
 
   actions: {
+    // 添加溝通紀錄
+    addCommunication(orderId, content, type = 'note') {
+      if (!this.communications[orderId]) {
+        this.communications[orderId] = []
+      }
+
+      const communication = {
+        id: Date.now(),
+        type,
+        content,
+        createdAt: new Date().toISOString(),
+        createdBy: 'staff' // 之後可以從 user store 獲取
+      }
+
+      this.communications[orderId].unshift(communication)
+      return communication
+    },
+
+    // 更新訂單商品
+    updateOrderProducts(orderId, products) {
+      const order = this.orders.find(o => o.id === orderId)
+      if (!order) return false
+
+      // 計算新的總金額
+      const total = products.reduce((sum, product) => {
+        return sum + (product.price * product.quantity)
+      }, 0)
+
+      // 更新訂單
+      order.products = products
+      order.total = total
+
+      // 添加修改記錄
+      this.addCommunication(
+        orderId,
+        '訂單商品已更新',
+        'system'
+      )
+
+      return true
+    },
+
+    // 確認訂單
+    confirmOrder(orderId, note) {
+      const order = this.orders.find(o => o.id === orderId)
+      if (!order) return false
+
+      order.status = 'confirmed'
+      
+      // 添加確認記錄
+      this.addCommunication(
+        orderId,
+        note || '訂單已確認',
+        'system'
+      )
+
+      ElMessage.success('訂單已確認')
+      return true
+    },
+
+    // 拒絕訂單
+    rejectOrder(orderId, reason) {
+      const order = this.orders.find(o => o.id === orderId)
+      if (!order) return false
+
+      order.status = 'cancelled'
+      
+      // 添加拒絕記錄
+      this.addCommunication(
+        orderId,
+        '訂單已拒絕，原因：' + reason,
+        'system'
+      )
+
+      ElMessage.success('訂單已拒絕')
+      return true
+    },
+
     initializeMockOrders() {
       const mockOrders = [
         {
@@ -42,6 +132,64 @@ export const useOrderStore = defineStore('order', {
           status: 'pending',
           total: 5160,
           note: '請在下午時段配送'
+        },
+        {
+          id: 'ORD-007',
+          createdAt: '2024-01-20T11:30:00',
+          customer: {
+            name: '張美玲',
+            phone: '0923-456-789',
+            address: '台北市大安區復興南路二段50號'
+          },
+          products: [
+            {
+              id: 5,
+              name: '意大利白葡萄酒 2021',
+              price: 1680,
+              quantity: 3,
+              subtotal: 5040,
+              preorder: true
+            }
+          ],
+          payment: {
+            method: 'online'
+          },
+          status: 'pending',
+          total: 5040,
+          note: '需要禮盒包裝'
+        },
+        {
+          id: 'ORD-008',
+          createdAt: '2024-01-20T12:15:00',
+          customer: {
+            name: '李大維',
+            phone: '0934-567-890',
+            address: '台北市中山區林森北路100號'
+          },
+          products: [
+            {
+              id: 7,
+              name: '獺祭 純米大吟釀 45',
+              price: 1580,
+              quantity: 2,
+              subtotal: 3160,
+              preorder: false
+            },
+            {
+              id: 8,
+              name: '久保田 千寿',
+              price: 1280,
+              quantity: 1,
+              subtotal: 1280,
+              preorder: true
+            }
+          ],
+          payment: {
+            method: 'cod'
+          },
+          status: 'pending',
+          total: 4440,
+          note: ''
         },
         {
           id: 'ORD-002',
@@ -100,86 +248,42 @@ export const useOrderStore = defineStore('order', {
           status: 'processing',
           total: 4940,
           note: '需要禮盒包裝'
-        },
-        {
-          id: 'ORD-004',
-          createdAt: '2024-01-17T16:40:00',
-          customer: {
-            name: '陳小玲',
-            phone: '0945-678-901',
-            address: '台北市松山區民生東路四段120號'
-          },
-          products: [
-            {
-              id: 2,
-              name: '意大利基安蒂紅酒 2019',
-              price: 1980,
-              quantity: 4,
-              subtotal: 7920,
-              preorder: true
-            }
-          ],
-          payment: {
-            method: 'online'
-          },
-          status: 'shipped',
-          total: 7920,
-          note: '週末配送'
-        },
-        {
-          id: 'ORD-005',
-          createdAt: '2024-01-16T11:25:00',
-          customer: {
-            name: '林小美',
-            phone: '0956-789-012',
-            address: '台北市內湖區成功路四段80號'
-          },
-          products: [
-            {
-              id: 9,
-              name: '出羽桜 純米大吟釀',
-              price: 1480,
-              quantity: 2,
-              subtotal: 2960,
-              preorder: true
-            }
-          ],
-          payment: {
-            method: 'cod'
-          },
-          status: 'completed',
-          total: 2960,
-          note: ''
-        },
-        {
-          id: 'ORD-006',
-          createdAt: '2024-01-15T13:50:00',
-          customer: {
-            name: '黃小琳',
-            phone: '0967-890-123',
-            address: '台北市士林區中正路100號'
-          },
-          products: [
-            {
-              id: 3,
-              name: '西班牙里奧哈紅酒 2017',
-              price: 2180,
-              quantity: 1,
-              subtotal: 2180,
-              preorder: true
-            }
-          ],
-          payment: {
-            method: 'online'
-          },
-          status: 'cancelled',
-          total: 2180,
-          note: '客戶取消訂單'
         }
       ]
 
       // 清空現有訂單並添加 mock 訂單
       this.orders = mockOrders
+
+      // 初始化一些 mock 溝通紀錄
+      this.communications = {
+        'ORD-001': [
+          {
+            id: 1,
+            type: 'note',
+            content: '已聯繫客戶確認配送時間',
+            createdAt: '2024-01-20T10:35:00',
+            createdBy: 'staff'
+          }
+        ],
+        'ORD-007': [
+          {
+            id: 2,
+            type: 'note',
+            content: '客戶要求加急處理',
+            createdAt: '2024-01-20T11:40:00',
+            createdBy: 'staff'
+          }
+        ],
+        'ORD-008': [
+          {
+            id: 3,
+            type: 'system',
+            content: '系統自動通知：訂單包含預購商品',
+            createdAt: '2024-01-20T12:15:00',
+            createdBy: 'system'
+          }
+        ]
+      }
     },
 
     createOrder(orderData) {
@@ -196,6 +300,16 @@ export const useOrderStore = defineStore('order', {
       
       // 添加到訂單列表
       this.orders.push(newOrder)
+      
+      // 初始化溝通紀錄
+      this.communications[orderId] = []
+      
+      // 添加創建記錄
+      this.addCommunication(
+        orderId,
+        '訂單已建立',
+        'system'
+      )
       
       // 顯示成功消息
       ElMessage.success('訂單建立成功')
