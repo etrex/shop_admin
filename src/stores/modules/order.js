@@ -75,6 +75,7 @@ export const useOrderStore = defineStore('order', {
       const order = this.orders.find(o => o.id === orderId)
       if (!order) return false
 
+      // 更新訂單狀態
       order.status = 'confirmed'
       
       // 添加確認記錄
@@ -84,7 +85,6 @@ export const useOrderStore = defineStore('order', {
         'system'
       )
 
-      ElMessage.success('訂單已確認')
       return true
     },
 
@@ -93,6 +93,7 @@ export const useOrderStore = defineStore('order', {
       const order = this.orders.find(o => o.id === orderId)
       if (!order) return false
 
+      // 更新訂單狀態
       order.status = 'cancelled'
       
       // 添加拒絕記錄
@@ -102,7 +103,6 @@ export const useOrderStore = defineStore('order', {
         'system'
       )
 
-      ElMessage.success('訂單已拒絕')
       return true
     },
 

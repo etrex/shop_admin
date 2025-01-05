@@ -271,7 +271,7 @@ const noteRules = {
 
 // 選擇訂單
 const selectOrder = (order) => {
-  selectedOrder.value = order
+  selectedOrder.value = { ...order }
 }
 
 // 格式化日期
@@ -335,6 +335,7 @@ const handleConfirmOrder = async () => {
   if (success) {
     confirmDialogVisible.value = false
     selectedOrder.value = null
+    ElMessage.success('訂單已確認')
   }
 }
 
@@ -350,6 +351,7 @@ const handleRejectOrder = async () => {
   if (success) {
     rejectDialogVisible.value = false
     selectedOrder.value = null
+    ElMessage.success('訂單已拒絕')
   }
 }
 
@@ -442,22 +444,20 @@ const handleAddNote = async () => {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    height: 100%;
     overflow-y: auto;
     padding-right: 4px;
 
-    .detail-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .detail-section {
+      flex-shrink: 0;
+    }
 
-      h3 {
-        margin: 0;
-      }
+    .communication-section {
+      flex-shrink: 0;
+    }
 
-      .actions {
-        display: flex;
-        gap: 12px;
-      }
+    :deep(.el-card__body) {
+      overflow-y: auto;
     }
   }
 
