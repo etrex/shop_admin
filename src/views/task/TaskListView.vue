@@ -2,10 +2,13 @@
   <div class="task-list">
     <div class="page-header">
       <h2>任務列表</h2>
+      <el-button type="primary" @click="router.push({ name: 'order-create' })">
+        確認新訂單
+      </el-button>
     </div>
 
     <!-- 任務列表 -->
-    <el-table :data="orders" style="width: 100%" v-loading="loading">
+    <el-table :data="pendingOrders" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="訂單編號" width="120" />
       <el-table-column prop="created_at" label="建立時間" width="180">
         <template #default="{ row }">
@@ -13,25 +16,15 @@
         </template>
       </el-table-column>
       <el-table-column prop="customer.name" label="客戶姓名" width="120" />
+      <el-table-column label="預購商品" width="100">
+        <template #default="{ row }">
+          <el-tag v-if="hasPreorderItems(row)" type="warning">是</el-tag>
+          <el-tag v-else type="success">否</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="total" label="訂單金額" width="120">
         <template #default="{ row }">
           NT$ {{ formatNumber(row.total) }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="訂單狀態" width="120">
-        <template #default="{ row }">
-          <el-select 
-            v-model="row.status" 
-            @change="handleStatusChange(row)"
-            :disabled="updating === row.id"
-          >
-            <el-option
-              v-for="status in availableStatuses"
-              :key="status.value"
-              :label="status.label"
-              :value="status.value"
-            />
-          </el-select>
         </template>
       </el-table-column>
       <el-table-column prop="payment.method" label="付款方式" width="120">
@@ -39,27 +32,91 @@
           {{ getPaymentMethodLabel(row.payment.method) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="180">
+      <el-table-column label="操作" width="250">
         <template #default="{ row }">
-          <el-button type="primary" link @click="viewOrderDetail(row.id)">
+          <el-button-group>
+            <el-button 
+              type="success" 
+              :loading="updating === row.id"
+              @click="confirmOrder(row)"
+            >
+              確認訂單
+            </el-button>
+            <el-button 
+              type="danger" 
+              :loading="updating === row.id"
+              @click="rejectOrder(row)"
+            >
+              拒絕訂單
+            </el-button>
+          </el-button-group>
+          <el-button type="primary" link @click="viewOrderDetail(row.id)" class="ml-2">
             查看詳情
           </el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 分頁 -->
-    <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :total="total"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
+    <!-- 確認對話框 -->
+    <el-dialog
+      v-model="confirmDialogVisible"
+      title="確認訂單"
+      width="500px"
+    >
+      <el-form :model="confirmForm" label-width="100px">
+        <el-form-item label="預計出貨日">
+          <el-date-picker
+            v-model="confirmForm.estimatedShipDate"
+            type="date"
+            placeholder="選擇日期"
+            :disabled-date="disabledDate"
+            class="w-100"
+          />
+        </el-form-item>
+        <el-form-item label="備註">
+          <el-input
+            v-model="confirmForm.note"
+            type="textarea"
+            rows="3"
+            placeholder="請輸入備註（選填）"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="confirmDialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="handleConfirmOrder" :loading="updating">
+            確認
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
+
+    <!-- 拒絕對話框 -->
+    <el-dialog
+      v-model="rejectDialogVisible"
+      title="拒絕訂單"
+      width="500px"
+    >
+      <el-form :model="rejectForm" label-width="100px">
+        <el-form-item label="拒絕原因" required>
+          <el-input
+            v-model="rejectForm.reason"
+            type="textarea"
+            rows="3"
+            placeholder="請輸入拒絕原因"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="rejectDialogVisible = false">取消</el-button>
+          <el-button type="danger" @click="handleRejectOrder" :loading="updating">
+            拒絕
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -73,20 +130,28 @@ const router = useRouter()
 const orderStore = useOrderStore()
 
 // 列表數據
-const orders = computed(() => orderStore.getAllOrders)
 const loading = ref(false)
-const currentPage = ref(1)
-const pageSize = ref(10)
-const total = computed(() => orders.value.length)
 const updating = ref(null)
 
-// 可用的訂單狀態
-const availableStatuses = [
-  { value: 'pending', label: '待處理' },
-  { value: 'processing', label: '處理中' },
-  { value: 'completed', label: '已完成' },
-  { value: 'cancelled', label: '已取消' }
-]
+// 只顯示待處理的訂單
+const pendingOrders = computed(() => 
+  orderStore.getAllOrders.filter(order => order.status === 'pending')
+)
+
+// 確認對話框
+const confirmDialogVisible = ref(false)
+const confirmForm = ref({
+  orderId: null,
+  estimatedShipDate: null,
+  note: ''
+})
+
+// 拒絕對話框
+const rejectDialogVisible = ref(false)
+const rejectForm = ref({
+  orderId: null,
+  reason: ''
+})
 
 // 格式化日期
 const formatDate = (date) => {
@@ -107,50 +172,90 @@ const getPaymentMethodLabel = (method) => {
   return methodMap[method] || method
 }
 
+// 檢查是否有預購商品
+const hasPreorderItems = (order) => {
+  return order.products.some(product => product.preorder)
+}
+
 // 查看訂單詳情
 const viewOrderDetail = (orderId) => {
   router.push({ name: 'order-detail', params: { id: orderId } })
 }
 
-// 處理狀態變更
-const handleStatusChange = async (order) => {
+// 確認訂單
+const confirmOrder = (order) => {
+  confirmForm.value = {
+    orderId: order.id,
+    estimatedShipDate: null,
+    note: ''
+  }
+  confirmDialogVisible.value = true
+}
+
+// 處理確認訂單
+const handleConfirmOrder = async () => {
+  if (!confirmForm.value.estimatedShipDate) {
+    ElMessage.warning('請選擇預計出貨日')
+    return
+  }
+
   try {
-    updating.value = order.id
-    await orderStore.updateOrderStatus(order.id, order.status)
+    updating.value = confirmForm.value.orderId
+    await orderStore.updateOrderStatus(confirmForm.value.orderId, 'processing', {
+      estimatedShipDate: confirmForm.value.estimatedShipDate,
+      note: confirmForm.value.note
+    })
+    confirmDialogVisible.value = false
+    ElMessage.success('訂單已確認')
   } finally {
     updating.value = null
   }
 }
 
-// 處理頁碼變更
-const handleCurrentChange = (page) => {
-  currentPage.value = page
-  fetchOrders()
-}
-
-// 處理每頁筆數變更
-const handleSizeChange = (size) => {
-  pageSize.value = size
-  fetchOrders()
-}
-
-// 獲取訂單列表
-const fetchOrders = async () => {
-  loading.value = true
-  try {
-    // 不需要做任何事情，因為數據已經在 store 中了
-    await new Promise(resolve => setTimeout(resolve, 100))
-  } catch (error) {
-    console.error('獲取訂單列表失敗：', error)
-    ElMessage.error('獲取訂單列表失敗')
-  } finally {
-    loading.value = false
+// 拒絕訂單
+const rejectOrder = (order) => {
+  rejectForm.value = {
+    orderId: order.id,
+    reason: ''
   }
+  rejectDialogVisible.value = true
+}
+
+// 處理拒絕訂單
+const handleRejectOrder = async () => {
+  if (!rejectForm.value.reason) {
+    ElMessage.warning('請輸入拒絕原因')
+    return
+  }
+
+  try {
+    updating.value = rejectForm.value.orderId
+    await orderStore.updateOrderStatus(rejectForm.value.orderId, 'cancelled', {
+      reason: rejectForm.value.reason
+    })
+    rejectDialogVisible.value = false
+    ElMessage.success('訂單已拒絕')
+  } finally {
+    updating.value = null
+  }
+}
+
+// 禁用的日期（今天之前的日期）
+const disabledDate = (time) => {
+  return time.getTime() < Date.now() - 8.64e7 // 8.64e7 是一天的毫秒數
 }
 
 // 初始化
 onMounted(() => {
-  fetchOrders()
+  loading.value = true
+  try {
+    // 不需要做任何事情，因為數據已經在 store 中了
+    loading.value = false
+  } catch (error) {
+    console.error('獲取訂單列表失敗：', error)
+    ElMessage.error('獲取訂單列表失敗')
+    loading.value = false
+  }
 })
 </script>
 
@@ -167,10 +272,12 @@ onMounted(() => {
     }
   }
 
-  .pagination-container {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
+  .ml-2 {
+    margin-left: 8px;
+  }
+
+  .w-100 {
+    width: 100%;
   }
 }
 </style> 

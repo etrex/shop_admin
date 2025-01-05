@@ -8,55 +8,51 @@ export const useOrderStore = defineStore('order', {
   }),
 
   getters: {
-    // 獲取所有訂單
     getAllOrders: (state) => state.orders,
     
-    // 根據 ID 獲取訂單
-    getOrderById: (state) => (id) => {
-      return state.orders.find(order => order.id === id)
+    getOrderById: (state) => (orderId) => {
+      return state.orders.find(order => order.id === orderId)
     }
   },
 
   actions: {
-    // 建立訂單
     createOrder(orderData) {
-      // 生成訂單 ID (格式: ORDyyyyMMddxxx)
-      const now = new Date()
-      const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
-      const randomNum = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
-      const orderId = `ORD${dateStr}${randomNum}`
-
+      // 生成訂單 ID
+      const orderId = 'ORD-' + String(this.orders.length + 1).padStart(3, '0')
+      
+      // 創建新訂單
       const newOrder = {
         id: orderId,
-        created_at: now.toISOString(),
+        createdAt: new Date().toISOString(),
         status: 'pending',
         ...orderData
       }
-
-      this.orders.unshift(newOrder)
+      
+      // 添加到訂單列表
+      this.orders.push(newOrder)
+      
+      // 顯示成功消息
       ElMessage.success('訂單建立成功')
+      
       return orderId
     },
 
-    // 更新訂單狀態
     updateOrderStatus(orderId, status) {
-      const order = this.getOrderById(orderId)
+      const order = this.orders.find(o => o.id === orderId)
       if (order) {
         order.status = status
-        ElMessage.success('訂單狀態更新成功')
+        return true
       }
+      return false
     },
 
-    // 更新訂單資料
     updateOrder(orderId, orderData) {
-      const index = this.orders.findIndex(order => order.id === orderId)
+      const index = this.orders.findIndex(o => o.id === orderId)
       if (index !== -1) {
-        this.orders[index] = {
-          ...this.orders[index],
-          ...orderData
-        }
-        ElMessage.success('訂單更新成功')
+        this.orders[index] = { ...this.orders[index], ...orderData }
+        return true
       }
+      return false
     }
   }
 }) 

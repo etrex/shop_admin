@@ -45,6 +45,26 @@ const router = createRouter({
           path: '',
           name: 'task-list',
           component: () => import('@/views/task/TaskListView.vue')
+        },
+        {
+          path: 'confirm-new-order',
+          name: 'confirm-new-order',
+          component: () => import('@/views/task/ConfirmNewOrderView.vue')
+        },
+        {
+          path: 'return-request',
+          name: 'return-request',
+          component: () => import('@/views/task/ReturnRequestView.vue')
+        },
+        {
+          path: 'stock-check',
+          name: 'stock-check',
+          component: () => import('@/views/task/StockCheckView.vue')
+        },
+        {
+          path: 'supplier-evaluation',
+          name: 'supplier-evaluation',
+          component: () => import('@/views/task/SupplierEvaluationView.vue')
         }
       ]
     },

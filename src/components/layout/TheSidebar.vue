@@ -63,29 +63,6 @@
           </el-menu-item-group>
         </el-sub-menu>
 
-        <!-- Quick Links Section -->
-        <el-sub-menu index="quick-links">
-          <template #title>
-            <el-icon><link /></el-icon>
-            <span>快速連結</span>
-          </template>
-          
-          <el-menu-item index="new-order">
-            <el-icon><plus /></el-icon>
-            <template #title>新增訂單</template>
-          </el-menu-item>
-          
-          <el-menu-item index="stock-check">
-            <el-icon><box /></el-icon>
-            <template #title>庫存查詢</template>
-          </el-menu-item>
-          
-          <el-menu-item index="procurement">
-            <el-icon><shopping-cart /></el-icon>
-            <template #title>採購作業</template>
-          </el-menu-item>
-        </el-sub-menu>
-
         <!-- Main Navigation -->
         <el-menu-item index="dashboard">
           <el-icon><odometer /></el-icon>
@@ -140,7 +117,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/modules/user'
 import {
   List,
-  Link,
   Plus,
   Box,
   ShoppingCart,
@@ -176,13 +152,15 @@ const todayTasks = ref([
     id: 1,
     title: '確認新訂單',
     priority: 'warning',
-    icon: 'document'
+    icon: 'document',
+    route: 'confirm-new-order'
   },
   {
     id: 2,
     title: '處理退貨申請',
     priority: 'danger',
-    icon: 'warning'
+    icon: 'warning',
+    route: 'return-request'
   }
 ])
 
@@ -191,13 +169,15 @@ const pendingTasks = ref([
     id: 3,
     title: '庫存盤點',
     priority: 'info',
-    icon: 'box'
+    icon: 'box',
+    route: 'stock-check'
   },
   {
     id: 4,
     title: '供應商評估',
     priority: 'success',
-    icon: 'shopping-cart'
+    icon: 'shopping-cart',
+    route: 'supplier-evaluation'
   }
 ])
 
@@ -207,11 +187,14 @@ const pendingTasksCount = computed(() => {
 
 const handleSelect = (index) => {
   if (index.startsWith('task-')) {
-    // Handle task selection
-    const taskId = index.split('-')[1]
-    console.log('Selected task:', taskId)
+    // 處理任務選擇
+    const taskId = parseInt(index.split('-')[1])
+    const task = [...todayTasks.value, ...pendingTasks.value].find(t => t.id === taskId)
+    if (task && task.route) {
+      router.push({ name: task.route })
+    }
   } else {
-    // Handle navigation
+    // 處理一般導航
     router.push({ name: index })
   }
 }
