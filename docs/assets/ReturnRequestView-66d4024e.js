@@ -1,0 +1,1 @@
+/* empty css                                                                                  */import{a as t,b as o,g as n}from"./index-e1c6c1fc.js";const u={__name:"ReturnRequestView",setup(r){return(s,c)=>{const e=t("base-under-construction");return o(),n(e,{title:"處理退貨申請"})}}};export{u as default};

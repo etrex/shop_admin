@@ -1,1 +1,0 @@
-import{B as e}from"./BaseUnderConstructionView-6ee28a6d.js";import{b as r,g as t}from"./index-ac2423d8.js";/* empty css                                                                                  */const m={__name:"ProcurementAnalysisView",setup(o){return(s,a)=>(r(),t(e,{title:"採購分析"}))}};export{m as default};

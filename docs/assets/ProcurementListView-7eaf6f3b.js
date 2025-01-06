@@ -1,1 +1,0 @@
-import{_ as o,a as n,b as c,d as _,h as t,e as r}from"./index-ac2423d8.js";const a={},d={class:"procurement-list"},i={class:"content"};function l(p,e){const s=n("el-empty");return c(),_("div",d,[e[0]||(e[0]=t("h2",null,"採購單列表",-1)),t("div",i,[r(s,{description:"採購單列表開發中"})])])}const u=o(a,[["render",l],["__scopeId","data-v-efdb0ec8"]]);export{u as default};

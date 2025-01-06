@@ -1,1 +1,0 @@
-import{B as r}from"./BaseUnderConstructionView-6ee28a6d.js";import{b as e,g as t}from"./index-ac2423d8.js";/* empty css                                                                                  */const _={__name:"InventoryTransferView",setup(o){return(n,a)=>(e(),t(r,{title:"庫存調撥"}))}};export{_ as default};

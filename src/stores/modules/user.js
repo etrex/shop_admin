@@ -72,7 +72,12 @@ export const useUserStore = defineStore('user', {
       if (role === 'customer') {
         this.userInfo = {
           name: '訪客',
-          avatar: ''
+          avatar: '',
+          customerInfo: {
+            name: '王小明',
+            phone: '0912-345-678',
+            address: '台北市信義區信義路五段7號'
+          }
         }
       } else {
         this.userInfo = {
