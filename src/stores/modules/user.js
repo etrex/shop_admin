@@ -4,30 +4,30 @@ import router from '@/router'
 
 // 角色定義
 const roles = {
-  admin: {
-    label: '管理員',
-    permissions: ['all'],
-    defaultRoute: 'dashboard'
+  customer: {
+    label: '消費者',
+    permissions: ['order_create', 'order_view'],
+    defaultRoute: 'order-list'
   },
   customer_service: {
     label: '客服人員',
     permissions: ['order_management', 'customer_service'],
     defaultRoute: 'order-list'
   },
-  warehouse: {
-    label: '倉庫人員',
-    permissions: ['inventory_management', 'shipping'],
-    defaultRoute: 'inventory-list'
-  },
   procurement: {
     label: '採購人員',
     permissions: ['procurement_management', 'supplier_management'],
     defaultRoute: 'procurement-list'
   },
-  customer: {
-    label: '消費者',
-    permissions: ['order_create', 'order_view'],
-    defaultRoute: 'order-list'
+  warehouse: {
+    label: '倉庫人員',
+    permissions: ['inventory_management', 'shipping'],
+    defaultRoute: 'inventory-list'
+  },
+  admin: {
+    label: '管理員',
+    permissions: ['all'],
+    defaultRoute: 'dashboard'
   }
 }
 
