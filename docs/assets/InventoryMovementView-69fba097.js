@@ -1,0 +1,1 @@
+import{_ as o,a as s,b as _,d as c,h as t,e as a}from"./index-ac2423d8.js";const r={},d={class:"inventory-movement"},i={class:"content"};function l(m,e){const n=s("el-empty");return _(),c("div",d,[e[0]||(e[0]=t("h2",null,"庫存異動",-1)),t("div",i,[a(n,{description:"庫存異動功能開發中"})])])}const v=o(r,[["render",l],["__scopeId","data-v-5d5710fc"]]);export{v as default};

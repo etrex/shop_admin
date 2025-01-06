@@ -1,0 +1,1 @@
+import{B as t}from"./BaseUnderConstructionView-6ee28a6d.js";import{b as o,g as r}from"./index-ac2423d8.js";/* empty css                                                                                  */const p={__name:"StockMonitorView",setup(e){return(a,c)=>(o(),r(t,{title:"庫存監控"}))}};export{p as default};

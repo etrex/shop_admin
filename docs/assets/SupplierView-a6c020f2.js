@@ -1,0 +1,1 @@
+import{B as e}from"./BaseUnderConstructionView-6ee28a6d.js";import{b as r,g as t}from"./index-ac2423d8.js";/* empty css                                                                                  */const i={__name:"SupplierView",setup(o){return(a,p)=>(r(),t(e,{title:"供應商管理"}))}};export{i as default};
