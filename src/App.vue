@@ -5,12 +5,16 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useOrderStore } from '@/stores/modules/order'
+import { usePurchaseOrderStore } from '@/stores/modules/purchaseOrder'
 
 const orderStore = useOrderStore()
+const purchaseOrderStore = usePurchaseOrderStore()
 
 onMounted(() => {
   // 初始化 mock 訂單
   orderStore.initializeMockOrders()
+  // 初始化 mock 進貨單
+  purchaseOrderStore.initializeMockPurchaseOrders()
 })
 </script>
 

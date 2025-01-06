@@ -162,16 +162,16 @@ const customerInfo = computed(() => userStore.userInfo.customerInfo)
 
 // 模擬商品數據
 const products = ref([
-  { id: 1, name: '法國波爾多紅酒 2018', price: 2580, stock: 0, preorder: true },
-  { id: 2, name: '意大利基安蒂紅酒 2019', price: 1980, stock: 0, preorder: true },
-  { id: 3, name: '西班牙里奧哈紅酒 2017', price: 2180, stock: 0, preorder: true },
-  { id: 4, name: '法國勃艮第白酒 2020', price: 2380, stock: 5, preorder: false },
-  { id: 5, name: '意大利白葡萄酒 2021', price: 1680, stock: 0, preorder: true },
-  { id: 6, name: '德國雷司令白酒 2020', price: 1880, stock: 0, preorder: true },
-  { id: 7, name: '獺祭 純米大吟釀 45', price: 1580, stock: 3, preorder: false },
-  { id: 8, name: '久保田 千寿', price: 1280, stock: 0, preorder: true },
-  { id: 9, name: '出羽桜 純米大吟釀', price: 1480, stock: 0, preorder: true },
-  { id: 10, name: '八海山 特別本醸造', price: 980, stock: 0, preorder: true }
+  { id: 'P001', name: '法國波爾多紅酒 2018', price: 2580, stock: 0, preorder: true },
+  { id: 'P002', name: '意大利基安蒂紅酒 2019', price: 1980, stock: 0, preorder: true },
+  { id: 'P003', name: '西班牙里奧哈紅酒 2017', price: 2180, stock: 0, preorder: true },
+  { id: 'P004', name: '法國勃艮第白酒 2020', price: 2380, stock: 5, preorder: false },
+  { id: 'P005', name: '意大利白葡萄酒 2021', price: 1680, stock: 0, preorder: true },
+  { id: 'P006', name: '德國雷司令白酒 2020', price: 1880, stock: 0, preorder: true },
+  { id: 'P007', name: '獺祭 純米大吟釀 45', price: 1580, stock: 3, preorder: false },
+  { id: 'P008', name: '久保田 千寿', price: 1280, stock: 0, preorder: true },
+  { id: 'P009', name: '出羽桜 純米大吟釀', price: 1480, stock: 0, preorder: true },
+  { id: 'P010', name: '八海山 特別本醸造', price: 980, stock: 0, preorder: true }
 ])
 
 const formRef = ref(null)

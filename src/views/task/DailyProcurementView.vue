@@ -351,6 +351,7 @@
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { usePurchaseOrderStore } from '@/stores/modules/purchaseOrder'
 import { useOrderStore } from '@/stores/modules/order'
 import { useProcurementStore } from '@/stores/modules/procurement'
@@ -359,6 +360,7 @@ import { useProcurementStore } from '@/stores/modules/procurement'
 const purchaseOrderStore = usePurchaseOrderStore()
 const orderStore = useOrderStore()
 const procurementStore = useProcurementStore()
+const router = useRouter()
 
 // 當前步驟
 const currentStep = computed(() => procurementStore.currentStep)
@@ -423,68 +425,52 @@ const handleBoxItemQtyChange = (item, value) => {
 
 // 生成進貨單
 const generatePurchaseOrders = () => {
-  const activeSuppliers = procurementStore.activeSuppliers
-  
-  // 檢查是否有需要採購的商品
-  if (activeSuppliers.length === 0) {
-    ElMessage.warning('沒有需要採購的商品')
-    return
-  }
+  // 為每個供應商生成進貨單
+  procurementStore.activeSuppliers.forEach(supplier => {
+    // 獲取該供應商的採購品項
+    const items = procurementStore.filteredSuggestions
+      .filter(item => item.selectedSupplierId === supplier.id && item.purchaseQty > 0)
+      .map(item => ({
+        id: item.id,
+        name: item.name,
+        purchaseQty: item.purchaseQty,
+        price: item.price
+      }))
 
-  // 為每個供應商創建進貨單
-  activeSuppliers.forEach(supplier => {
-    // 一般採購商品
-    const regularItems = procurementStore.filteredSuggestions.filter(item => 
-      item.selectedSupplierId === supplier.id && item.purchaseQty > 0
-    )
+    if (items.length > 0) {
+      // 計算總金額
+      const totalAmount = items.reduce((sum, item) => sum + (item.price * item.purchaseQty), 0)
 
-    // 湊箱商品
-    const boxItems = procurementStore.supplierBoxItems(supplier.id)
-      .filter(item => item.purchaseQty > 0)
-
-    // 合併所有採購項目
-    const allItems = [...regularItems, ...boxItems]
-
-    const tomorrow = new Date()
-    tomorrow.setDate(tomorrow.getDate() + 1)
-
-    // 計算總金額
-    const totalAmount = allItems.reduce((sum, item) => {
-      return sum + (item.price * item.purchaseQty)
-    }, 0)
-
-    // 創建進貨單
-    purchaseOrderStore.createPurchaseOrder({
-      supplier,
-      items: allItems,
-      totalAmount,
-      expectedDeliveryDate: tomorrow.toISOString(),
-      relatedOrders: procurementStore.selectedOrders
-    })
-  })
-
-  // 更新所有選中訂單的狀態為備貨中
-  procurementStore.selectedOrders.forEach(order => {
-    orderStore.updateOrderStatus(order.id, 'preparing')
-    // 檢查每個品項是否需要進貨
-    order.products.forEach(product => {
-      // 檢查此品項是否在採購清單中且有採購數量
-      const purchaseItem = procurementStore.filteredSuggestions.find(item => 
-        item.id === product.id && item.purchaseQty > 0
-      )
-      // 只有需要進貨的品項才設定為等待進貨
-      if (purchaseItem) {
-        product.stockStatus = 'pending'
-      } else {
-        // 不需要進貨的品項直接設定為已入倉
-        product.stockStatus = 'stocked'
+      // 創建進貨單
+      const purchaseOrderData = {
+        supplier: {
+          id: supplier.id,
+          name: supplier.name
+        },
+        expectedDeliveryDate: getTomorrowDate(),
+        totalAmount,
+        items,
+        relatedOrders: procurementStore.selectedOrders
       }
-    })
+
+      // 使用 store 創建進貨單
+      const orderId = purchaseOrderStore.createPurchaseOrder(purchaseOrderData)
+      
+      if (orderId) {
+        // 更新相關訂單狀態
+        procurementStore.selectedOrders.forEach(order => {
+          orderStore.updateOrderStatus(order.id, 'processing')
+        })
+      }
+    }
   })
 
+  // 顯示成功訊息
+  ElMessage.success('進貨單已建立')
+  
+  // 重置採購流程
+  currentStep.value = 1
   procurementStore.reset()
-  activeSupplier.value = '' // 清除當前選中的供應商
-  ElMessage.success('進貨單已生成，相關訂單已更新為備貨中')
 }
 
 // 修改確認採購建議的函數
