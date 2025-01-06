@@ -9,7 +9,7 @@
       <el-card v-if="currentStep === 1" class="full-width">
         <template #header>
           <div class="card-header">
-            <h3>選擇待處理訂單</h3>
+            <h3>選擇已確認訂單</h3>
             <div class="actions">
               <el-button type="primary" @click="confirmOrderSelection" :disabled="!hasSelectedOrders()">
                 下一步
@@ -373,75 +373,11 @@ watch(currentStep, (newStep) => {
   }
 })
 
-// Mock 數據：待處理訂單
-const pendingOrders = ref([
-  {
-    id: 'ORD-001',
-    createdAt: '2024-01-20T10:30:00',
-    customer: {
-      name: '王小明',
-      phone: '0912-345-678'
-    },
-    products: [
-      {
-        id: 'P001',
-        name: '法國波爾多紅酒 2018',
-        quantity: 2,
-        price: 2580
-      }
-    ],
-    total: 5160,
-    payment: {
-      method: 'online'
-    }
-  },
-  {
-    id: 'ORD-007',
-    createdAt: '2024-01-20T11:30:00',
-    customer: {
-      name: '張美玲',
-      phone: '0923-456-789'
-    },
-    products: [
-      {
-        id: 'P002',
-        name: '意大利白葡萄酒 2021',
-        quantity: 3,
-        price: 1680
-      }
-    ],
-    total: 5040,
-    payment: {
-      method: 'online'
-    }
-  },
-  {
-    id: 'ORD-008',
-    createdAt: '2024-01-20T12:15:00',
-    customer: {
-      name: '李大維',
-      phone: '0934-567-890'
-    },
-    products: [
-      {
-        id: 'P003',
-        name: '獺祭 純米大吟釀 45',
-        quantity: 2,
-        price: 1580
-      },
-      {
-        id: 'P004',
-        name: '久保田 千寿',
-        quantity: 1,
-        price: 1280
-      }
-    ],
-    total: 4440,
-    payment: {
-      method: 'cod'
-    }
-  }
-])
+// 取得已確認訂單列表
+const pendingOrders = computed(() => {
+  // 取得已確認狀態的訂單，這些訂單已通過客服確認且付款完成，等待進行採購處理
+  return orderStore.getAllOrders.filter(order => order.status === 'confirmed')
+})
 
 // 商品詳情相關
 const itemDetailVisible = ref(false)

@@ -55,21 +55,6 @@
             </template>
           </el-menu-item>
 
-          <el-menu-item index="box-completion">
-            <el-icon><Box /></el-icon>
-            <template #title>
-              <div class="task-item">
-                <span>湊箱建議</span>
-                <el-badge
-                  v-if="boxCompletionCount > 0"
-                  :value="boxCompletionCount"
-                  class="order-badge"
-                  type="success"
-                />
-              </div>
-            </template>
-          </el-menu-item>
-
           <el-menu-item index="purchase-orders">
             <el-icon><Document /></el-icon>
             <template #title>進貨單列表</template>
@@ -82,11 +67,6 @@
 
         <!-- 採購人員功能 -->
         <template v-if="isProcurement">
-          <el-menu-item index="stock-monitor">
-            <el-icon><Monitor /></el-icon>
-            <template #title>庫存監控</template>
-          </el-menu-item>
-
           <el-menu-item index="supplier-management">
             <el-icon><Connection /></el-icon>
             <template #title>供應商管理</template>
@@ -177,11 +157,10 @@ const pendingOrdersCount = computed(() => {
   return orderStore.getPendingOrders.length
 })
 
-// Mock 數據：待處理採購數量
-const pendingProcurementCount = computed(() => 2)
-
-// Mock 數據：湊箱建議數量
-const boxCompletionCount = computed(() => 3)
+// 計算待處理採購訂單數量
+const pendingProcurementCount = computed(() => {
+  return orderStore.getPendingOrders.filter(order => order.status === '已確認').length
+})
 
 const activeMenu = computed(() => {
   const path = route.path.split('/')
