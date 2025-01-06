@@ -265,7 +265,7 @@ const suppliers = ref([
 
 // 篩選後的進貨單
 const filteredPurchaseOrders = computed(() => {
-  let result = purchaseOrderStore.getPurchaseOrders
+  let result = purchaseOrderStore.getAllPurchaseOrders
 
   // 供應商篩選
   if (filterSupplier.value) {
