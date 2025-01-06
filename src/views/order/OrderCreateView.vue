@@ -42,7 +42,7 @@
 
         <div 
           v-for="(product, index) in form.products" 
-          :key="index"
+          :key="`product-${index}-${product.id || 'new'}`"
           class="product-item"
         >
           <el-row :gutter="20">
@@ -81,7 +81,7 @@
                   v-model="product.quantity"
                   :min="1"
                   :max="99"
-                  @change="calculateTotal"
+                  @change="(value) => handleQuantityChange(value, index)"
                   class="w-100"
                 />
               </el-form-item>
@@ -224,6 +224,11 @@ const handleProductChange = (productId, index) => {
   }
 }
 
+// 處理數量變更
+const handleQuantityChange = (value, index) => {
+  calculateSubtotal(index)
+}
+
 // 計算小計
 const calculateSubtotal = (index) => {
   const product = form.products[index]
@@ -240,18 +245,19 @@ const calculateTotal = () => {
 
 // 新增商品
 const addProduct = () => {
-  form.products.push({
+  const newProduct = {
     id: '',
     quantity: 1,
     price: 0,
     subtotal: 0,
     preorder: false
-  })
+  }
+  form.products = [...form.products, newProduct]
 }
 
 // 移除商品
 const removeProduct = (index) => {
-  form.products.splice(index, 1)
+  form.products = form.products.filter((_, i) => i !== index)
   calculateTotal()
 }
 
