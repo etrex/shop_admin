@@ -61,6 +61,39 @@
           </el-menu-item>
         </template>
 
+        <!-- 倉庫人員任務 -->
+        <template v-if="isWarehouse">
+          <el-menu-item index="warehouse-in">
+            <el-icon><TopRight /></el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>入倉作業</span>
+                <el-badge
+                  v-if="pendingWarehouseInCount > 0"
+                  :value="pendingWarehouseInCount"
+                  class="order-badge"
+                  type="warning"
+                />
+              </div>
+            </template>
+          </el-menu-item>
+
+          <el-menu-item index="warehouse-out">
+            <el-icon><BottomLeft /></el-icon>
+            <template #title>
+              <div class="task-item">
+                <span>出倉作業</span>
+                <el-badge
+                  v-if="pendingWarehouseOutCount > 0"
+                  :value="pendingWarehouseOutCount"
+                  class="order-badge"
+                  type="warning"
+                />
+              </div>
+            </template>
+          </el-menu-item>
+        </template>
+
         <div class="menu-header">
           <h3>待處理任務</h3>
         </div>
@@ -138,7 +171,9 @@ import {
   Fold,
   Monitor,
   Connection,
-  DataLine
+  DataLine,
+  TopRight,
+  BottomLeft
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -151,6 +186,7 @@ const isCollapse = ref(false)
 const isCustomer = computed(() => userStore.currentRole === 'customer')
 const isCustomerService = computed(() => userStore.currentRole === 'customer_service')
 const isProcurement = computed(() => userStore.currentRole === 'procurement')
+const isWarehouse = computed(() => userStore.currentRole === 'warehouse')
 
 // 計算待處理訂單數量
 const pendingOrdersCount = computed(() => {
@@ -160,6 +196,18 @@ const pendingOrdersCount = computed(() => {
 // 計算待處理採購訂單數量
 const pendingProcurementCount = computed(() => {
   return orderStore.getPendingOrders.filter(order => order.status === '已確認').length
+})
+
+// 計算待處理入倉數量
+const pendingWarehouseInCount = computed(() => {
+  // TODO: 從 store 獲取待處理入倉數量
+  return 0
+})
+
+// 計算待處理出倉數量
+const pendingWarehouseOutCount = computed(() => {
+  // TODO: 從 store 獲取待處理出倉數量
+  return 0
 })
 
 const activeMenu = computed(() => {
@@ -198,6 +246,12 @@ const handleSelect = (index) => {
       break
     case 'purchase-orders':
       router.push('/task/purchase-orders')
+      break
+    case 'warehouse-in':
+      router.push('/warehouse/in')
+      break
+    case 'warehouse-out':
+      router.push('/warehouse/out')
       break
     default:
       router.push(`/${index}`)

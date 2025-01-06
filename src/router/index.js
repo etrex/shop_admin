@@ -150,6 +150,22 @@ const router = createRouter({
           component: () => import('@/views/procurement/SupplierView.vue')
         }
       ]
+    },
+    {
+      path: '/warehouse',
+      component: DefaultLayout,
+      children: [
+        {
+          path: 'in',
+          name: 'warehouse-in',
+          component: () => import('@/views/warehouse/WarehouseInView.vue')
+        },
+        {
+          path: 'out',
+          name: 'warehouse-out',
+          component: () => import('@/views/warehouse/WarehouseOutView.vue')
+        }
+      ]
     }
   ]
 })

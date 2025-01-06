@@ -1,81 +1,115 @@
-import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { ElMessage } from 'element-plus'
 
-export const usePurchaseOrderStore = defineStore('purchaseOrder', () => {
-  // State
-  const purchaseOrders = ref([])
-  const loading = ref(false)
+export const usePurchaseOrderStore = defineStore('purchaseOrder', {
+  state: () => ({
+    purchaseOrders: []
+  }),
 
-  // Getters
-  const getPurchaseOrders = computed(() => purchaseOrders.value)
-  const getPurchaseOrderById = computed(() => (id) => {
-    return purchaseOrders.value.find(po => po.id === id)
-  })
+  getters: {
+    // 獲取所有進貨單
+    getAllPurchaseOrders: (state) => state.purchaseOrders,
 
-  // Actions
-  const createPurchaseOrder = (orderData) => {
-    // 生成進貨單號 (PO-YYYYMMDD-XXX)
-    const today = new Date()
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '')
-    const sequence = (purchaseOrders.value.length + 1).toString().padStart(3, '0')
-    const purchaseOrderId = `PO-${dateStr}-${sequence}`
+    // 獲取待入倉進貨單
+    getPendingWarehouseInOrders: (state) => {
+      return state.purchaseOrders.filter(order => order.status === 'pending_in')
+    },
 
-    // 確保所有商品數據都包含正確的採購數量
-    const items = orderData.items.map(item => ({
-      id: item.id,
-      name: item.name,
-      purchaseQty: item.purchaseQty || 0,  // 確保有採購數量
-      price: item.price
-    }))
-
-    const purchaseOrder = {
-      id: purchaseOrderId,
-      createdAt: new Date().toISOString(),
-      supplier: orderData.supplier,
-      items,
-      totalAmount: orderData.totalAmount,
-      expectedDeliveryDate: orderData.expectedDeliveryDate,
-      relatedOrders: orderData.relatedOrders,
-      status: 'pending'
+    // 獲取已入倉進貨單
+    getCompletedWarehouseInOrders: (state) => {
+      return state.purchaseOrders.filter(order => order.status === 'completed')
     }
+  },
 
-    purchaseOrders.value.push(purchaseOrder)
-    ElMessage.success('進貨單已建立')
-    return purchaseOrder
-  }
-
-  const updatePurchaseOrderStatus = (id, status) => {
-    const purchaseOrder = purchaseOrders.value.find(po => po.id === id)
-    if (purchaseOrder) {
-      purchaseOrder.status = status
-      ElMessage.success('進貨單狀態已更新')
-    }
-  }
-
-  const updatePurchaseOrder = (id, data) => {
-    const index = purchaseOrders.value.findIndex(po => po.id === id)
-    if (index !== -1) {
-      purchaseOrders.value[index] = {
-        ...purchaseOrders.value[index],
-        ...data
+  actions: {
+    // 創建進貨單
+    createPurchaseOrder(orderData) {
+      const orderId = 'PO-' + String(this.purchaseOrders.length + 1).padStart(3, '0')
+      
+      const newOrder = {
+        id: orderId,
+        createdAt: new Date().toISOString(),
+        status: 'pending_in', // 初始狀態為待入倉
+        ...orderData
       }
-      ElMessage.success('進貨單已更新')
+      
+      this.purchaseOrders.push(newOrder)
+      ElMessage.success('進貨單建立成功')
+      
+      return orderId
+    },
+
+    // 更新進貨單狀態
+    updatePurchaseOrderStatus(orderId, status) {
+      const order = this.purchaseOrders.find(o => o.id === orderId)
+      if (order) {
+        order.status = status
+        return true
+      }
+      return false
+    },
+
+    // 確認入倉
+    confirmWarehouseIn(orderId, receivingData) {
+      const order = this.purchaseOrders.find(o => o.id === orderId)
+      if (!order) return false
+
+      // 更新進貨單狀態和實收數據
+      order.status = 'completed'
+      order.receivedAt = new Date().toISOString()
+      order.receivingData = receivingData
+      
+      // TODO: 建立入倉單
+      // warehouseStore.createWarehouseInOrder({
+      //   purchaseOrder: order,
+      //   receivingData
+      // })
+
+      return true
+    },
+
+    // 初始化 mock 數據
+    initializeMockPurchaseOrders() {
+      this.purchaseOrders = [
+        {
+          id: 'PO-001',
+          createdAt: '2024-01-20T10:00:00',
+          status: 'pending_in',
+          supplier: {
+            id: 'S001',
+            name: '法國酒商'
+          },
+          expectedDeliveryDate: '2024-01-22T10:00:00',
+          totalAmount: 25800,
+          items: [
+            {
+              id: 'P001',
+              name: '法國波爾多紅酒 2018',
+              purchaseQty: 10,
+              price: 2580
+            }
+          ]
+        },
+        {
+          id: 'PO-002',
+          createdAt: '2024-01-20T11:00:00',
+          status: 'pending_in',
+          supplier: {
+            id: 'S002',
+            name: '義大利酒商'
+          },
+          expectedDeliveryDate: '2024-01-22T14:00:00',
+          totalAmount: 50400,
+          items: [
+            {
+              id: 'P002',
+              name: '意大利白葡萄酒 2021',
+              purchaseQty: 30,
+              price: 1680
+            }
+          ]
+        }
+      ]
     }
-  }
-
-  return {
-    // State
-    purchaseOrders,
-    loading,
-
-    // Getters
-    getPurchaseOrders,
-    getPurchaseOrderById,
-
-    // Actions
-    createPurchaseOrder,
-    updatePurchaseOrderStatus,
-    updatePurchaseOrder
   }
 }) 
