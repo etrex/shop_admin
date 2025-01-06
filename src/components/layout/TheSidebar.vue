@@ -149,7 +149,7 @@ const isCollapse = ref(false)
 
 // 判斷是否為消費者
 const isCustomer = computed(() => userStore.currentRole === 'customer')
-const isCustomerService = computed(() => userStore.currentRole === 'customer-service')
+const isCustomerService = computed(() => userStore.currentRole === 'customer_service')
 const isProcurement = computed(() => userStore.currentRole === 'procurement')
 
 // 計算待處理訂單數量
