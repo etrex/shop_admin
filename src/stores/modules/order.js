@@ -118,6 +118,9 @@ export const useOrderStore = defineStore('order', {
     },
 
     initializeMockOrders() {
+      // 如果已經有訂單，就不要初始化
+      if (this.orders.length > 0) return
+
       const mockOrders = [
         {
           id: 'ORD-001',
@@ -263,7 +266,7 @@ export const useOrderStore = defineStore('order', {
         }
       ]
 
-      // 清空現有訂單並添加 mock 訂單
+      // 只在沒有訂單時初始化
       this.orders = mockOrders
 
       // 初始化一些 mock 溝通紀錄
@@ -299,34 +302,20 @@ export const useOrderStore = defineStore('order', {
     },
 
     createOrder(orderData) {
-      // 生成訂單 ID
-      const orderId = 'ORD-' + String(this.orders.length + 1).padStart(3, '0')
-      
-      // 創建新訂單
-      const newOrder = {
-        id: orderId,
-        createdAt: new Date().toISOString(),
-        status: 'pending',
-        ...orderData
-      }
-      
       // 添加到訂單列表
-      this.orders.push(newOrder)
+      this.orders.unshift(orderData)
       
-      // 初始化溝通紀錄
-      this.communications[orderId] = []
+      // 初始化該訂單的溝通記錄
+      this.communications[orderData.id] = []
       
-      // 添加創建記錄
+      // 添加系統記錄
       this.addCommunication(
-        orderId,
+        orderData.id,
         '訂單已建立',
         'system'
       )
-      
-      // 顯示成功消息
-      ElMessage.success('訂單建立成功')
-      
-      return orderId
+
+      return orderData.id
     },
 
     updateOrderStatus(orderId, status) {

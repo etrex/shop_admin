@@ -234,9 +234,6 @@ import { ElMessage } from 'element-plus'
 
 const orderStore = useOrderStore()
 
-// 初始化 mock 訂單
-orderStore.initializeMockOrders()
-
 // 訂單相關
 const pendingOrders = computed(() => orderStore.getPendingOrders)
 const selectedOrder = ref(null)

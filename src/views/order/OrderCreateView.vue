@@ -271,12 +271,22 @@ const submitOrder = async () => {
     
     // 建立訂單
     const orderData = {
+      id: `ORD-${Date.now()}`,  // 生成唯一訂單編號
+      createdAt: new Date().toISOString(),  // 添加建立時間
       customer: form.customer,
-      products: form.products,
+      products: form.products.map(product => {
+        const selectedProduct = products.value.find(p => p.id === product.id)
+        return {
+          ...product,
+          name: selectedProduct.name,
+          preorder: selectedProduct.preorder,
+          stockStatus: 'pending'  // 初始庫存狀態
+        }
+      }),
       payment: form.payment,
       note: form.note,
       total: form.total,
-      status: 'pending'
+      status: 'pending'  // 初始訂單狀態為待處理
     }
     
     const orderId = orderStore.createOrder(orderData)
