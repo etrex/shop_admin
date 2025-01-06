@@ -24,6 +24,17 @@ export const useOrderStore = defineStore('order', {
     // 獲取待處理的訂單
     getPendingOrders: (state) => {
       return state.orders.filter(order => order.status === 'pending')
+    },
+
+    // 獲取可出貨的訂單（所有品項都已入倉）
+    getReadyToShipOrders: (state) => {
+      return state.orders.filter(order => {
+        // 檢查訂單狀態是否為備貨中
+        if (order.status !== 'preparing') return false
+        
+        // 檢查所有品項是否都已入倉
+        return order.products.every(product => product.stockStatus === 'stocked')
+      })
     }
   },
 
@@ -123,7 +134,8 @@ export const useOrderStore = defineStore('order', {
               price: 2580,
               quantity: 2,
               subtotal: 5160,
-              preorder: true
+              preorder: true,
+              stockStatus: 'pending'
             }
           ],
           payment: {

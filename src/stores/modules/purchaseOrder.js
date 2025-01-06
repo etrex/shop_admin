@@ -59,11 +59,17 @@ export const usePurchaseOrderStore = defineStore('purchaseOrder', {
       order.receivedAt = new Date().toISOString()
       order.receivingData = receivingData
       
-      // TODO: 建立入倉單
-      // warehouseStore.createWarehouseInOrder({
-      //   purchaseOrder: order,
-      //   receivingData
-      // })
+      // 更新相關訂單的品項狀態
+      if (order.relatedOrders) {
+        order.relatedOrders.forEach(relatedOrder => {
+          relatedOrder.products.forEach(product => {
+            const receivedItem = receivingData.find(item => item.id === product.id)
+            if (receivedItem && receivedItem.receivedQty > 0) {
+              product.stockStatus = 'stocked'
+            }
+          })
+        })
+      }
 
       return true
     },

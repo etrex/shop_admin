@@ -466,6 +466,20 @@ const generatePurchaseOrders = () => {
   // 更新所有選中訂單的狀態為備貨中
   procurementStore.selectedOrders.forEach(order => {
     orderStore.updateOrderStatus(order.id, 'preparing')
+    // 檢查每個品項是否需要進貨
+    order.products.forEach(product => {
+      // 檢查此品項是否在採購清單中且有採購數量
+      const purchaseItem = procurementStore.filteredSuggestions.find(item => 
+        item.id === product.id && item.purchaseQty > 0
+      )
+      // 只有需要進貨的品項才設定為等待進貨
+      if (purchaseItem) {
+        product.stockStatus = 'pending'
+      } else {
+        // 不需要進貨的品項直接設定為已入倉
+        product.stockStatus = 'stocked'
+      }
+    })
   })
 
   procurementStore.reset()
