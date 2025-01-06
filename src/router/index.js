@@ -164,6 +164,11 @@ const router = createRouter({
           path: 'out',
           name: 'warehouse-out',
           component: () => import('@/views/warehouse/WarehouseOutView.vue')
+        },
+        {
+          path: 'record',
+          name: 'warehouse-record',
+          component: () => import('@/views/warehouse/WarehouseRecordView.vue')
         }
       ]
     }

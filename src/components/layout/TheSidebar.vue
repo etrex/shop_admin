@@ -92,6 +92,11 @@
               </div>
             </template>
           </el-menu-item>
+
+          <el-menu-item index="warehouse-record">
+            <el-icon><List /></el-icon>
+            <template #title>倉庫紀錄</template>
+          </el-menu-item>
         </template>
 
         <div class="menu-header">
@@ -173,7 +178,8 @@ import {
   Connection,
   DataLine,
   TopRight,
-  BottomLeft
+  BottomLeft,
+  List
 } from '@element-plus/icons-vue'
 
 const router = useRouter()
@@ -252,6 +258,9 @@ const handleSelect = (index) => {
       break
     case 'warehouse-out':
       router.push('/warehouse/out')
+      break
+    case 'warehouse-record':
+      router.push('/warehouse/record')
       break
     default:
       router.push(`/${index}`)

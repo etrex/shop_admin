@@ -96,8 +96,10 @@
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { usePurchaseOrderStore } from '@/stores/modules/purchaseOrder'
+import { useWarehouseStore } from '@/stores/modules/warehouse'
 
 const purchaseOrderStore = usePurchaseOrderStore()
+const warehouseStore = useWarehouseStore()
 const selectedOrder = ref(null)
 
 // 獲取待入倉進貨單
@@ -136,8 +138,10 @@ const confirmReceiving = () => {
     }))
   }
 
-  // 確認入倉
+  // 確認入倉並建立入倉紀錄
   if (purchaseOrderStore.confirmWarehouseIn(selectedOrder.value.id, receivingData)) {
+    // 建立入倉紀錄
+    warehouseStore.createInboundRecord(selectedOrder.value, receivingData)
     ElMessage.success('入倉完成')
     selectedOrder.value = null
   } else {
