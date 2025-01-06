@@ -262,6 +262,15 @@ const handleSelect = (index) => {
     case 'warehouse-record':
       router.push('/warehouse/record')
       break
+    case 'order-list':
+      router.push('/order')
+      break
+    case 'product-list':
+      router.push('/product')
+      break
+    case 'order-create':
+      router.push('/order/create')
+      break
     default:
       router.push(`/${index}`)
   }
