@@ -118,7 +118,7 @@ export const useOrderStore = defineStore('order', {
           },
           products: [
             {
-              id: 1,
+              id: 'P001',
               name: '法國波爾多紅酒 2018',
               price: 2580,
               quantity: 2,
@@ -143,7 +143,7 @@ export const useOrderStore = defineStore('order', {
           },
           products: [
             {
-              id: 5,
+              id: 'P002',
               name: '意大利白葡萄酒 2021',
               price: 1680,
               quantity: 3,
@@ -168,7 +168,7 @@ export const useOrderStore = defineStore('order', {
           },
           products: [
             {
-              id: 7,
+              id: 'P003',
               name: '獺祭 純米大吟釀 45',
               price: 1580,
               quantity: 2,
@@ -176,7 +176,7 @@ export const useOrderStore = defineStore('order', {
               preorder: false
             },
             {
-              id: 8,
+              id: 'P004',
               name: '久保田 千寿',
               price: 1280,
               quantity: 1,
@@ -201,7 +201,7 @@ export const useOrderStore = defineStore('order', {
           },
           products: [
             {
-              id: 7,
+              id: 'P003',
               name: '獺祭 純米大吟釀 45',
               price: 1580,
               quantity: 3,
@@ -226,15 +226,15 @@ export const useOrderStore = defineStore('order', {
           },
           products: [
             {
-              id: 4,
-              name: '法國勃艮第白酒 2020',
+              id: 'P001',
+              name: '法國波爾多紅酒 2018',
               price: 2380,
               quantity: 1,
               subtotal: 2380,
               preorder: false
             },
             {
-              id: 8,
+              id: 'P004',
               name: '久保田 千寿',
               price: 1280,
               quantity: 2,
