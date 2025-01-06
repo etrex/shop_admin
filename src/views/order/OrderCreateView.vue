@@ -275,7 +275,8 @@ const submitOrder = async () => {
       products: form.products,
       payment: form.payment,
       note: form.note,
-      total: form.total
+      total: form.total,
+      status: 'pending'
     }
     
     const orderId = orderStore.createOrder(orderData)
